@@ -2,103 +2,112 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Facilities Clearance Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+    <title>LINHS Portal | Facilities Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .navbar { background: linear-gradient(135deg, #334155 0%, #1e293b 100%); color: white; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .brand { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+        .logout-btn { background-color: #ef4444; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 13px; border-radius: 6px; }
+        
+        .container { max-width: 1600px; width: 100%; margin: 32px auto; padding: 0 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; flex: 1; }
+        
+        .panel { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); overflow: hidden; display: flex; flex-direction: column; }
+        .panel-header { padding: 20px 24px; background: #fafafa; border-bottom: 1px solid #e2e8f0; font-size: 15px; font-weight: 700; color: #334155; }
+        
+        /* Roster Explorer Tree Substructure styling */
+        .explorer-tree { padding: 20px; overflow-y: auto; max-height: 700px; display: flex; flex-direction: column; gap: 16px; }
+        .section-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .section-badge-header { background: #f1f5f9; color: #334155; padding: 10px 16px; font-weight: 700; font-size: 13px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .student-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f8fafc; background: #fff; }
+        .student-row:last-child { border-bottom: none; }
+        .student-meta { width: 45%; }
+        .student-meta .name { display: block; font-weight: 600; color: #1e293b; font-size: 14px; }
+        .student-meta .lrn-lbl { font-family: monospace; font-size: 11px; color: #64748b; margin-top: 2px; display: block; }
+        
+        /* Sleek Inline Form Fields */
+        .liability-inline-form { display: flex; gap: 8px; width: 55%; align-items: center; }
+        .liability-inline-input { flex: 1; padding: 8px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        .liability-inline-input:focus { border-color: #334155; }
+        .log-pill-btn { background-color: #334155; color: white; border: none; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+        .log-pill-btn:hover { background-color: #1e293b; }
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-bold text-amber-400">LINHS Clearance Portal</h1>
-            <p class="text-xs text-gray-400">Logged in as: <span th:text="${userName}">Facilities Admin</span> (Property Management)</p>
-        </div>
-        <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold">Logout</a>
+        /* Outstanding Liabilities Register Table Layout */
+        .table-wrap { width: 100%; overflow-x: auto; }
+        .liability-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .liability-table th { background-color: #f8fafc; color: #64748b; font-weight: 600; padding: 14px 24px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; font-size: 11px; }
+        .liability-table td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; }
+        
+        .liability-item-text { color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 8px; border-radius: 6px; font-size: 13px; border: 1px solid #fee2e2; display: inline-block; }
+        .resolve-action-btn { background-color: #10b981; color: white; border: none; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; }
+        .resolve-action-btn:hover { background-color: #059669; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">🏢 <span>LINHS Portal | Facilities & Property Management</span></div>
+        <a href="/logout" class="logout-btn">Logout</a>
     </nav>
 
-    <div class="max-w-7xl mx-auto p-6">
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-lg">
-                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Inspected Property Records</p>
-                <p class="text-3xl font-bold mt-2 text-white" th:text="${totalCount}">0</p>
-            </div>
-            <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-lg">
-                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Pending Chair/Locker Audits</p>
-                <p class="text-3xl font-bold mt-2 text-yellow-500" th:text="${pendingCount}">0</p>
-            </div>
-            <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-lg">
-                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Cleared Property Profiles</p>
-                <p class="text-3xl font-bold mt-2 text-amber-500" th:text="${clearedCount}">0</p>
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">📂 Roster Sectional Explorer Directory</div>
+            <div class="explorer-tree">
+                <div th:each="entry : ${studentsBySection}" class="section-card">
+                    <div class="section-badge-header" th:text="'🏫 Section: ' + ${entry.key}">Section Code Group</div>
+                    <div class="section-contents">
+                        <div th:each="student : ${entry.value}" class="student-row">
+                            <div class="student-meta">
+                                <span class="name" th:text="${student.name}">Student Name</span>
+                                <span class="lrn-lbl" th:text="'LRN Mapping: ' + ${student.lrn}">LRN: 0000000</span>
+                            </div>
+                            <form action="/facilities/log-liability" method="POST" class="liability-inline-form">
+                                <input type="hidden" name="studentLrn" th:value="${student.lrn}" />
+                                <input type="text" name="itemDescription" class="liability-inline-input" placeholder="Type unreturned asset item description..." required />
+                                <button type="submit" class="log-pill-btn">+ Log</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#maps.isEmpty(studentsBySection)}" style="text-align: center; padding: 40px; color:#94a3b8;">No school classroom sections or students indexed in the portal.</div>
             </div>
         </div>
 
-        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
-            <div class="p-6 border-b border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h2 class="text-lg font-bold text-white">School Property Damage & Liability Registry</h2>
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by LRN, Name, or Section..." 
-                       class="bg-gray-900 text-gray-100 border border-gray-700 rounded-lg px-4 py-2 w-full md:w-72 focus:outline-none focus:border-amber-500">
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse" id="studentTable">
+        <div class="panel">
+            <div class="panel-header" th:text="'⚠️ Active Outstanding Unreturned Asset Register (' + ${activeLiabilitiesCount} + ' Records Found)'">⚠️ Active Outstanding Unreturned Asset Register (0 Records Found)</div>
+            <div class="table-wrap">
+                <table class="liability-table">
                     <thead>
-                        <tr class="bg-gray-700 text-gray-300 text-xs font-semibold uppercase tracking-wider">
-                            <th class="p-4">LRN</th>
-                            <th class="p-4">Student Name</th>
-                            <th class="p-4">Section</th>
-                            <th class="p-4">Property Accountability</th>
-                            <th class="p-4 text-center">Actions</th>
+                        <tr>
+                            <th>Student Account</th>
+                            <th>Section</th>
+                            <th>Assigned Liability Description</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-700 text-sm">
-                        <tr th:each="student : ${students}" class="hover:bg-gray-750 transition">
-                            <td class="p-4 font-mono text-gray-300" th:text="${student.lrn}">101234567890</td>
-                            <td class="p-4 font-semibold text-white" th:text="${student.name}">Juan Dela Cruz</td>
-                            <td class="p-4 text-gray-400" th:text="${student.section}">Grade 10 - Emerald</td>
-                            <td class="p-4">
-                                <span th:if="${student.facilitiesClearance == 'CLEARED'}" class="px-2.5 py-1 text-xs font-bold bg-amber-950 text-amber-400 rounded-full border border-amber-800">CLEARED</span>
-                                <span th:if="${student.facilitiesClearance == 'PENDING'}" class="px-2.5 py-1 text-xs font-bold bg-yellow-950 text-yellow-400 rounded-full border border-yellow-800">PENDING</span>
-                                <span th:if="${student.facilitiesClearance == 'UNCLEARED'}" class="px-2.5 py-1 text-xs font-bold bg-red-950 text-red-400 rounded-full border border-red-800">UNCLEARED</span>
+                    <tbody>
+                        <tr th:each="liability : ${activeLiabilities}">
+                            <td th:text="${liability.studentName}" style="font-weight: 700; color: #1e293b;"></td>
+                            <td th:text="${liability.section}" style="font-size: 13px; color: #475569;"></td>
+                            <td>
+                                <span class="liability-item-text" th:text="${liability.itemDescription}"></span>
                             </td>
-                            <td class="p-4">
-                                <div class="flex items-center justify-center gap-2">
-                                    <form th:action="@{/facilities/update-clearance}" method="POST" class="inline-block">
-                                        <input type="hidden" name="lrn" th:value="${student.lrn}">
-                                        <input type="hidden" name="status" value="CLEARED">
-                                        <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded transition">Clear</button>
-                                    </form>
-                                    <form th:action="@{/facilities/update-clearance}" method="POST" class="inline-block">
-                                        <input type="hidden" name="lrn" th:value="${student.lrn}">
-                                        <input type="hidden" name="status" value="UNCLEARED">
-                                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded transition">Unclear</button>
-                                    </form>
-                                </div>
+                            <td>
+                                <form action="/facilities/resolve-liability" method="POST" style="margin:0;">
+                                    <input type="hidden" name="liabilityId" th:value="${liability.id}" />
+                                    <button type="submit" class="resolve-action-btn">Clear Liability</button>
+                                </form>
                             </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(activeLiabilities)}">
+                            <td colspan="4" style="text-align: center; color: #94a3b8; padding: 40px;">All institutional property and equipment are accounted for. No open liabilities are logged.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
-    <script>
-        function filterTable() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const table = document.getElementById('studentTable');
-            const tr = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < tr.length; i++) {
-                let matchFound = false;
-                const tds = tr[i].getElementsByTagName('td');
-                for(let j = 0; j < 3; j++) {
-                    if (tds[j] && tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
-                        matchFound = true;
-                    }
-                }
-                tr[i].style.display = matchFound ? "" : "none";
-            }
-        }
-    </script>
 </body>
 </html>

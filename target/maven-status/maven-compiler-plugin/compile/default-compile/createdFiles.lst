@@ -9,7 +9,6 @@ com\linhs\portal\model\Student.class
 com\linhs\portal\repository\GuidanceRecordRepository.class
 com\linhs\portal\repository\BorrowRecordRepository.class
 com\linhs\portal\config\SecurityConfig.class
-com\linhs\portal\repository\ClinicRecordRepository.class
 com\linhs\portal\model\ClinicRecord.class
 com\linhs\portal\PortalApplication.class
 com\linhs\portal\component\DataInitializer.class

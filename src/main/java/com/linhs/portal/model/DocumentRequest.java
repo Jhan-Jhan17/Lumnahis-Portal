@@ -1,41 +1,42 @@
 package com.linhs.portal.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "document_requests")
 public class DocumentRequest {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    // FIXED: Changed type from String to Long
-    @Column(nullable = false)
+    
     private Long studentLrn;
-
-    @Column(nullable = false)
-    private String documentName; // "Form 137", "Good Moral", etc.
-
-    @Column(nullable = false)
-    private String status = "PENDING"; // "PENDING" or "RELEASED"
-
-    private LocalDate requestDate;
+    private String studentName;
+    private String documentType;
+    private LocalDateTime requestedAt;
+    private boolean isCompleted;
 
     public DocumentRequest() {}
 
+    public DocumentRequest(Long studentLrn, String studentName, String documentType, LocalDateTime requestedAt, boolean isCompleted) {
+        this.studentLrn = studentLrn;
+        this.studentName = studentName;
+        this.documentType = documentType;
+        this.requestedAt = requestedAt;
+        this.isCompleted = isCompleted;
+    }
+
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    
-    // FIXED: Getter and Setter type signatures
     public Long getStudentLrn() { return studentLrn; }
     public void setStudentLrn(Long studentLrn) { this.studentLrn = studentLrn; }
-    
-    public String getDocumentName() { return documentName; }
-    public void setDocumentName(String documentName) { this.documentName = documentName; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public LocalDate getRequestDate() { return requestDate; }
-    public void setRequestDate(LocalDate requestDate) { this.requestDate = requestDate; }
+    public String getStudentName() { return studentName; }
+    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public String getDocumentType() { return documentType; }
+    public void setDocumentType(String documentType) { this.documentType = documentType; }
+    public LocalDateTime getRequestedAt() { return requestedAt; }
+    public void setRequestedAt(LocalDateTime requestedAt) { this.requestedAt = requestedAt; }
+    public boolean getIsCompleted() { return isCompleted; }
+    public void setIsCompleted(boolean isCompleted) { this.isCompleted = isCompleted; }
 }

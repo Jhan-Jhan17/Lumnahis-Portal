@@ -1,15 +1,7 @@
 package com.linhs.portal.controller;
 
-import com.linhs.portal.model.User;
-import com.linhs.portal.model.Student;
-import com.linhs.portal.model.BorrowRecord;
-import com.linhs.portal.model.SportsEquipmentRecord;
-import com.linhs.portal.model.GuidanceRecord;
-import com.linhs.portal.repository.UserRepository;
-import com.linhs.portal.repository.StudentRepository;
-import com.linhs.portal.repository.BorrowRecordRepository;
-import com.linhs.portal.repository.SportsEquipmentRecordRepository;
-import com.linhs.portal.repository.GuidanceRecordRepository;
+import com.linhs.portal.model.*;
+import com.linhs.portal.repository.*;
 import com.linhs.portal.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 
@@ -21,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,19 +26,28 @@ public class PageController {
     private final BorrowRecordRepository borrowRecordRepository;
     private final SportsEquipmentRecordRepository sportsEquipmentRecordRepository;
     private final GuidanceRecordRepository guidanceRecordRepository;
+    private final DocumentRequestRepository documentRequestRepository;
+    private final ClinicLogRepository clinicLogRepository;
+    private final FacilityLiabilityRepository facilityLiabilityRepository;
 
     public PageController(AuthService authService, 
                           UserRepository userRepository, 
                           StudentRepository studentRepository,
                           BorrowRecordRepository borrowRecordRepository,
                           SportsEquipmentRecordRepository sportsEquipmentRecordRepository,
-                          GuidanceRecordRepository guidanceRecordRepository) {
+                          GuidanceRecordRepository guidanceRecordRepository,
+                          DocumentRequestRepository documentRequestRepository,
+                          ClinicLogRepository clinicLogRepository,
+                          FacilityLiabilityRepository facilityLiabilityRepository) {
         this.authService = authService;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.borrowRecordRepository = borrowRecordRepository;
         this.sportsEquipmentRecordRepository = sportsEquipmentRecordRepository;
         this.guidanceRecordRepository = guidanceRecordRepository;
+        this.documentRequestRepository = documentRequestRepository;
+        this.clinicLogRepository = clinicLogRepository;
+        this.facilityLiabilityRepository = facilityLiabilityRepository;
     }
 
     // --- PUBLIC PORTAL ROUTES ---
@@ -55,6 +57,27 @@ public class PageController {
     @GetMapping("/resources") public String resourcesPage() { return "resources"; }
     @GetMapping("/gallery") public String galleryPage() { return "gallery"; }
     @GetMapping("/clearance") public String clearancePage() { return "clearance-status"; }
+
+    @PostMapping("/search-clearance")
+    public String searchClearance(@RequestParam("lrn") Long lrn, Model model) {
+        java.util.Optional<Student> studentOpt = studentRepository.findById(lrn);
+        if (studentOpt.isPresent()) {
+            model.addAttribute("student", studentOpt.get());
+        } else {
+            model.addAttribute("errorMessage", "No student record found for LRN: " + lrn);
+        }
+        return "clearance-status";
+    }
+
+    // Public Endpoint Mocking Landing Page Document Request Action Submission
+    @PostMapping("/public/request-document")
+    public String publicRequestDocument(@RequestParam("lrn") Long lrn, @RequestParam("documentType") String documentType) {
+        Optional<Student> studentOpt = studentRepository.findById(lrn);
+        String name = studentOpt.isPresent() ? studentOpt.get().getName() : "Unknown Public Applicant";
+        DocumentRequest req = new DocumentRequest(lrn, name, documentType, LocalDateTime.now(), false);
+        documentRequestRepository.save(req);
+        return "redirect:/clearance?success=document_requested";
+    }
 
     // --- PORTAL SECURITY SIGNIN CONTROLS ---
     @GetMapping("/login")
@@ -87,7 +110,6 @@ public class PageController {
         return "login";
     }
 
-    // REVISED: Accepts POST form submissions targeted at either /teacher-portal or /login
     @PostMapping({"/teacher-portal", "/login"})
     public String processLogin(@RequestParam String email, @RequestParam String password, HttpSession session) {
         try {
@@ -319,6 +341,118 @@ public class PageController {
             studentRepository.save(student);
         }
         return "redirect:/lab-dashboard?success=clearance_updated";
+    }
+
+    // --- SECURED REGISTRAR DASHBOARD SUBSYSTEM ---
+    @GetMapping("/registrar-dashboard")
+    public String registrarDashboard(HttpSession session, Model model) {
+        if (!isAuthorized(session, "REGISTRAR")) return "redirect:/teacher-portal?error=unauthorized";
+        populateModel(session, model);
+        
+        List<DocumentRequest> incomingRequests = documentRequestRepository.findByIsCompletedFalse();
+        model.addAttribute("incomingRequests", incomingRequests);
+        model.addAttribute("incomingRequestsCount", incomingRequests.size());
+        
+        List<Student> allStudents = studentRepository.findAll();
+        model.addAttribute("students", allStudents);
+        model.addAttribute("totalCount", allStudents.size());
+        return "registrar-dashboard";
+    }
+
+    @PostMapping("/registrar/complete-request")
+    public String completeDocumentRequest(@RequestParam("requestId") Long requestId, HttpSession session) {
+        if (!isAuthorized(session, "REGISTRAR")) return "redirect:/teacher-portal?error=unauthorized";
+        Optional<DocumentRequest> reqOpt = documentRequestRepository.findById(requestId);
+        if (reqOpt.isPresent()) {
+            DocumentRequest req = reqOpt.get();
+            req.setIsCompleted(true);
+            documentRequestRepository.save(req);
+        }
+        return "redirect:/registrar-dashboard?success=request_completed";
+    }
+
+    // --- SECURED NURSE DASHBOARD SUBSYSTEM ---
+    @GetMapping("/nurse-dashboard")
+    public String nurseDashboard(HttpSession session, Model model) {
+        if (!isAuthorized(session, "NURSE")) return "redirect:/teacher-portal?error=unauthorized";
+        populateModel(session, model);
+        
+        List<ClinicLog> logs = clinicLogRepository.findAll();
+        model.addAttribute("clinicLogs", logs);
+        model.addAttribute("clinicLogsCount", logs.size());
+        
+        List<Student> allStudents = studentRepository.findAll();
+        model.addAttribute("students", allStudents);
+        return "nurse-dashboard";
+    }
+
+    @PostMapping("/nurse/log-visit")
+    public String logClinicVisit(@RequestParam("studentLrn") Long studentLrn, @RequestParam("reason") String reason, HttpSession session) {
+        if (!isAuthorized(session, "NURSE")) return "redirect:/teacher-portal?error=unauthorized";
+        Optional<Student> studentOpt = studentRepository.findById(studentLrn);
+        String name = studentOpt.isPresent() ? studentOpt.get().getName() : "Unknown Patient";
+        
+        ClinicLog log = new ClinicLog(studentLrn, name, reason, LocalDateTime.now());
+        clinicLogRepository.save(log);
+        return "redirect:/nurse-dashboard?success=visit_logged";
+    }
+
+    // --- SECURED FACILITIES ADMIN DASHBOARD SUBSYSTEM ---
+    @GetMapping("/facilities-dashboard")
+    public String facilitiesDashboard(HttpSession session, Model model) {
+        if (!isAuthorized(session, "FACILITIES_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
+        populateModel(session, model);
+        
+        List<Student> allStudents = studentRepository.findAll();
+        // Group students dynamically by their Sections for easy targeted listing
+        Map<String, List<Student>> studentsBySection = allStudents.stream()
+                .filter(s -> s.getSection() != null)
+                .collect(Collectors.groupingBy(Student::getSection));
+        
+        List<FacilityLiability> activeLiabilities = facilityLiabilityRepository.findByIsResolvedFalse();
+        
+        model.addAttribute("studentsBySection", studentsBySection);
+        model.addAttribute("activeLiabilities", activeLiabilities);
+        model.addAttribute("activeLiabilitiesCount", activeLiabilities.size());
+        return "facilities-dashboard";
+    }
+
+    @PostMapping("/facilities/log-liability")
+    public String logFacilityLiability(@RequestParam("studentLrn") Long studentLrn, @RequestParam("itemDescription") String itemDescription, HttpSession session) {
+        if (!isAuthorized(session, "FACILITIES_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
+        Optional<Student> studentOpt = studentRepository.findById(studentLrn);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            FacilityLiability liability = new FacilityLiability(studentLrn, student.getName(), student.getSection(), itemDescription, LocalDateTime.now(), false);
+            facilityLiabilityRepository.save(liability);
+            
+            // Set clearance status inside profile framework mapping
+            student.setLabClearance("PENDING"); 
+            studentRepository.save(student);
+        }
+        return "redirect:/facilities-dashboard?success=liability_logged";
+    }
+
+    @PostMapping("/facilities/resolve-liability")
+    public String resolveFacilityLiability(@RequestParam("liabilityId") Long liabilityId, HttpSession session) {
+        if (!isAuthorized(session, "FACILITIES_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
+        Optional<FacilityLiability> liabilityOpt = facilityLiabilityRepository.findById(liabilityId);
+        if (liabilityOpt.isPresent()) {
+            FacilityLiability liability = liabilityOpt.get();
+            liability.setIsResolved(true);
+            facilityLiabilityRepository.save(liability);
+            
+            List<FacilityLiability> remaining = facilityLiabilityRepository.findByStudentLrnAndIsResolvedFalse(liability.getStudentLrn());
+            if (remaining.isEmpty()) {
+                Optional<Student> studentOpt = studentRepository.findById(liability.getStudentLrn());
+                if (studentOpt.isPresent()) {
+                    Student student = studentOpt.get();
+                    student.setLabClearance("CLEARED");
+                    studentRepository.save(student);
+                }
+            }
+        }
+        return "redirect:/facilities-dashboard?success=liability_resolved";
     }
 
     // --- OTHER DASHBOARDS (Adviser, Principal) ---

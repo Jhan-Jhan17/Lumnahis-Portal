@@ -2,98 +2,206 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Guidance Counselor Dashboard</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-gray-50">
-
-    <nav class="bg-purple-900 p-4 text-white flex justify-between items-center shadow-md">
-        <div class="font-bold text-xl"><i class="fas fa-user-shield mr-2"></i> Guidance Counselor Portal</div>
-        <div>
-            <span class="mr-4" th:text="${userName}">Counselor</span>
-            <a href="/logout" class="bg-red-600 px-4 py-2 rounded text-sm hover:bg-red-700">Logout</a>
-        </div>
-    </nav>
-
-    <div class="container mx-auto p-6">
+    <title>LINHS Portal | Guidance Office</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f8; color: #333; min-height: 100vh; padding-bottom: 40px; }
         
-        <div th:if="${param.success}" class="mb-4 p-4 bg-purple-100 text-purple-800 border border-purple-300 rounded shadow">
-            Action completed! System compliance records updated successfully.
+        /* Dark Green Theme Header */
+        .dashboard-header { background-color: #064e3b; color: white; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .portal-title { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; }
+        .user-meta { display: flex; align-items: center; gap: 20px; }
+        .profile-info { text-align: right; }
+        .profile-name { font-weight: 600; font-size: 15px; }
+        .profile-role { font-size: 12px; color: #a7f3d0; opacity: 0.9; }
+        .logout-btn { background-color: #dc2626; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 14px; border-radius: 6px; transition: background 0.2s; }
+        .logout-btn:hover { background-color: #b91c1c; }
+
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Metrics */
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .metric-card { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #064e3b; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .metric-card.alert { border-left-color: #ef4444; }
+        .metric-card.success { border-left-color: #10b981; }
+        .metric-label { font-size: 12px; text-transform: uppercase; font-weight: 700; color: #6b7280; margin-bottom: 5px; }
+        .metric-value { font-size: 28px; font-weight: 800; color: #111827; }
+
+        /* Dual Column Layout */
+        .workspace-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
+        
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
+        .card-title { font-size: 16px; font-weight: 700; color: #064e3b; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; }
+
+        /* Forms */
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+        .form-control:focus { outline: none; border-color: #064e3b; }
+        .submit-btn { width: 100%; background-color: #064e3b; color: white; border: none; padding: 12px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .submit-btn:hover { background-color: #043e2e; }
+
+        /* Tables */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .data-table th { background-color: #f9fafb; color: #4b5563; font-weight: 600; padding: 12px; border-bottom: 1px solid #e5e7eb; text-transform: uppercase; font-size: 11px; }
+        .data-table td { padding: 12px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+        
+        .badge { display: inline-flex; padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 50px; text-transform: uppercase; }
+        .badge.pending { background-color: #fee2e2; color: #ef4444; }
+        .badge.cleared { background-color: #d1fae5; color: #10b981; }
+
+        .resolve-btn { background-color: #10b981; color: white; border: none; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; }
+        .resolve-btn:hover { background-color: #059669; }
+
+        .alert-box { background-color: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; border: 1px solid #a7f3d0; margin-bottom: 10px; }
+        .search-bar { width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+
+    <header class="dashboard-header">
+        <div class="portal-title">
+            <span>🕊️</span> LINHS Portal | Guidance Office
+        </div>
+        <div class="user-meta">
+            <div class="profile-info">
+                <div class="profile-name" th:text="${userName}">Counselor Name</div>
+                <div class="profile-role" th:text="${roleName}">GUIDANCE_COUNSELOR</div>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div th:if="${param.success != null}" class="alert-box">
+            <span th:if="${param.success[0] == 'case_logged'}">✔ New guidance case logged and student placed on hold.</span>
+            <span th:if="${param.success[0] == 'case_resolved'}">✔ Case resolved. Student clearance updated automatically if no cases remain.</span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow border lg:col-span-1">
-                <h2 class="text-lg font-bold mb-4 border-b pb-2 text-purple-800">Log Student Case / Infraction</h2>
-                <form action="/guidance/log-case" method="POST" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700">Student LRN</label>
-                        <input type="number" name="studentLrn" required class="w-full border p-2 rounded mt-1 focus:ring-purple-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700">Case / Classification Type</label>
-                        <select name="infractionType" required class="w-full border p-2 rounded mt-1 focus:ring-purple-500">
-                            <option value="" disabled selected>-- Select Type --</option>
-                            <option value="Tardiness / Chronic Absences">Tardiness / Chronic Absences</option>
-                            <option value="Uniform / Dress Code Violation">Uniform / Dress Code Violation</option>
-                            <option value="Conduct Misbehavior / Fighting">Conduct Misbehavior / Fighting</option>
-                            <option value="Academic Dishonesty">Academic Dishonesty</option>
-                            <option value="Routine Counseling Session">Routine Counseling Session</option>
-                            <option value="Parent-Teacher Consultation">Parent-Teacher Consultation</option>
+        <div class="metrics-grid">
+            <div class="metric-card alert">
+                <div class="metric-label">Unresolved Cases</div>
+                <div class="metric-value" th:text="${activeCasesCount}">0</div>
+            </div>
+            <div class="metric-card alert">
+                <div class="metric-label">Students on Hold</div>
+                <div class="metric-value" th:text="${pendingCount}">0</div>
+            </div>
+            <div class="metric-card success">
+                <div class="metric-label">Cleared Students</div>
+                <div class="metric-value" th:text="${clearedCount}">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Records</div>
+                <div class="metric-value" th:text="${totalCount}">0</div>
+            </div>
+        </div>
+
+        <div class="workspace-grid">
+            <div class="card">
+                <div class="card-title">📝 Log Infraction or Hold</div>
+                <form action="/guidance/log-case" method="POST">
+                    <div class="form-group">
+                        <label class="form-label">Select Student</label>
+                        <select name="studentLrn" class="form-control" required>
+                            <option value="" disabled selected>-- Select a student --</option>
+                            <option th:each="student : ${students}" th:value="${student.lrn}" th:text="${student.name} + ' (' + ${student.lrn} + ')'"></option>
                         </select>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700">Case Incident Details</label>
-                        <textarea name="details" rows="4" required placeholder="Describe case, actions taken, or agreements built..." class="w-full border p-2 rounded mt-1 text-sm focus:ring-purple-500"></textarea>
+                    <div class="form-group">
+                        <label class="form-label">Case / Infraction Type</label>
+                        <input type="text" name="infractionType" class="form-control" placeholder="e.g., Disciplinary, Good Moral..." required />
                     </div>
-
-                    <button type="submit" class="w-full bg-purple-800 text-white font-bold py-2 rounded hover:bg-purple-900 transition duration-200">
-                        Record Behavior Liability
-                    </button>
+                    <div class="form-group">
+                        <label class="form-label">Case Details</label>
+                        <textarea name="details" class="form-control" rows="4" placeholder="Enter brief details regarding this case..." required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">File Case & Place on Hold</button>
                 </form>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow border lg:col-span-2">
-                <h2 class="text-lg font-bold mb-4 border-b pb-2 text-purple-800">Active Behavior Cases & Holds</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+            <div class="card">
+                <div class="card-title">⚠️ Active Unresolved Cases</div>
+                <div class="table-responsive">
+                    <table class="data-table">
                         <thead>
-                            <tr class="bg-gray-100 text-sm">
-                                <th class="p-3">Student Identity</th>
-                                <th class="p-3">Classification</th>
-                                <th class="p-3">Case Narrative</th>
-                                <th class="p-3 text-right">Action</th>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Infraction Type</th>
+                                <th>Details</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="incident : ${activeCases}" class="border-b text-sm hover:bg-gray-50">
-                                <td class="p-3">
-                                    <span class="font-bold block text-gray-800" th:text="${incident.studentName}"></span>
-                                    <span class="text-xs text-gray-500" th:text="${'LRN: ' + incident.studentLrn}"></span>
-                                </td>
-                                <td class="p-3">
-                                    <span class="px-2 py-1 rounded text-xs bg-red-100 text-red-800 font-semibold" th:text="${incident.infractionType}"></span>
-                                </td>
-                                <td class="p-3 text-xs text-gray-600 max-w-xs truncate" th:text="${incident.details}">Details</td>
-                                <td class="p-3 text-right">
+                            <tr th:each="record : ${activeCases}">
+                                <td style="font-weight: 600;" th:text="${record.studentName}">Student</td>
+                                <td><span class="badge pending" th:text="${record.infractionType}">Type</span></td>
+                                <td th:text="${record.details}" style="color: #6b7280; font-size: 12px;">Details...</td>
+                                <td>
                                     <form action="/guidance/resolve-case" method="POST">
-                                        <input type="hidden" name="recordId" th:value="${incident.id}">
-                                        <button type="submit" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded hover:bg-green-700 font-bold transition duration-150">
-                                            Mark Resolved
-                                        </button>
+                                        <input type="hidden" name="recordId" th:value="${record.id}" />
+                                        <button type="submit" class="resolve-btn">Resolve</button>
                                     </form>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(activeCases)}">
-                                <td colspan="4" class="p-6 text-center text-gray-500 italic"><i class="fas fa-check-circle text-green-500 mr-1"></i> No active behavior holds or infractions open!</td>
+                                <td colspan="4" style="text-align: center; padding: 30px; color: #9ca3af;">No active cases pending resolution.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+        <div class="card">
+            <div class="card-title">📋 Master Clearance Registry</div>
+            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search by student name or LRN..." onkeyup="searchTable()">
+            
+            <div class="table-responsive">
+                <table class="data-table" id="masterTable">
+                    <thead>
+                        <tr>
+                            <th>LRN</th>
+                            <th>Student Name</th>
+                            <th>Section</th>
+                            <th>Guidance Clearance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="student : ${students}">
+                            <td style="font-family: monospace;" th:text="${student.lrn}">12345</td>
+                            <td style="font-weight: 600;" th:text="${student.name}">Name</td>
+                            <td th:text="${student.section}">Section</td>
+                            <td>
+                                <span th:class="'badge ' + ${#strings.toLowerCase(student.guidanceClearance)}" 
+                                      th:text="${student.guidanceClearance}">PENDING</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
+
+    <script>
+        // Live search filter for Master Registry
+        function searchTable() {
+            let input = document.getElementById("searchInput").value.toUpperCase();
+            let rows = document.getElementById("masterTable").getElementsByTagName("tr");
+            
+            for (let i = 1; i < rows.length; i++) {
+                let lrn = rows[i].cells[0].textContent || rows[i].cells[0].innerText;
+                let name = rows[i].cells[1].textContent || rows[i].cells[1].innerText;
+                if (lrn.toUpperCase().indexOf(input) > -1 || name.toUpperCase().indexOf(input) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    </script>
 </body>
 </html>

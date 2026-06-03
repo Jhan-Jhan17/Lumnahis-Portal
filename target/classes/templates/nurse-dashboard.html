@@ -2,104 +2,97 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Clinic Clearance Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+    <title>LINHS Portal | Clinic Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .navbar { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .brand { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+        .logout-btn { background-color: #ef4444; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 13px; border-radius: 6px; }
+        
+        .container { max-width: 1600px; width: 100%; margin: 32px auto; padding: 0 24px; display: grid; grid-template-columns: 420px 1fr; gap: 32px; flex: 1; }
+        
+        /* Widget Styling */
+        .panel { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); height: fit-content; overflow: hidden; }
+        .panel-header { padding: 20px 24px; background: #fafafa; border-bottom: 1px solid #e2e8f0; font-size: 15px; font-weight: 700; color: #1e3a8a; }
+        
+        /* Modern Clinic Form Controls */
+        .form-body { padding: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: border 0.2s; background-color: #fff; }
+        .form-control:focus { border-color: #1e3a8a; box-shadow: 0 0 0 3px rgba(30,58,138,0.08); }
+        .save-btn { width: 100%; background: #1e3a8a; color: white; border: none; padding: 14px; font-weight: 600; font-size: 14px; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
+        .save-btn:hover { opacity: 0.9; }
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-bold text-rose-400">LINHS Clearance Portal</h1>
-            <p class="text-xs text-gray-400">Logged in as: <span th:text="${userName}">Nurse</span> (School Clinic)</p>
-        </div>
-        <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold">Logout</a>
+        /* Custom Data Ledger Table Lists */
+        .table-wrap { width: 100%; overflow-x: auto; }
+        .clinic-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .clinic-table th { background-color: #f8fafc; color: #64748b; font-weight: 600; padding: 14px 24px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; font-size: 11px; }
+        .clinic-table td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; }
+        .clinic-table tr:hover { background-color: #f8fafc; }
+        
+        .patient-name { font-weight: 600; color: #1e293b; }
+        .timestamp-badge { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; font-family: monospace; }
+        .medical-reason-bubble { background: #eff6ff; color: #1e40af; font-weight: 500; display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">🩺 <span>LINHS Portal | Health & Clinic Clinic Management</span></div>
+        <a href="/logout" class="logout-btn">Logout</a>
     </nav>
 
-    <div class="max-w-7xl mx-auto p-6">
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-lg">
-                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Tracked Profiles</p>
-                <p class="text-3xl font-bold mt-2 text-white" th:text="${totalCount}">0</p>
-            </div>
-            <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-lg">
-                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Pending Medical Card Returns</p>
-                <p class="text-3xl font-bold mt-2 text-yellow-500" th:text="${pendingCount}">0</p>
-            </div>
-            <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-lg">
-                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Cleared Health Profile Accounts</p>
-                <p class="text-3xl font-bold mt-2 text-rose-500" th:text="${clearedCount}">0</p>
-            </div>
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">📝 Log New Student Clinic Admission</div>
+            <form action="/nurse/log-visit" method="POST" class="form-body">
+                <div class="form-group">
+                    <label class="form-label">Search / Select Admitted Student</label>
+                    <select name="studentLrn" class="form-control" required style="cursor: pointer;">
+                        <option value="" disabled selected>-- Choose Student Profile --</option>
+                        <option th:each="student : ${students}" th:value="${student.lrn}" th:text="${student.name} + ' (' + ${student.lrn} + ')'"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Medical Complaint / Treatment Action Reason</label>
+                    <input type="text" name="reason" class="form-control" placeholder="e.g., Severe Headaches, Asthma Attack, Administered First-Aid" required />
+                </div>
+                <button type="submit" class="save-btn">Commit Entry to Log</button>
+            </form>
         </div>
 
-        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
-            <div class="p-6 border-b border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h2 class="text-lg font-bold text-white">Clinic Medical Clearance Masterlist</h2>
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by LRN, Name, or Section..." 
-                       class="bg-gray-900 text-gray-100 border border-gray-700 rounded-lg px-4 py-2 w-full md:w-72 focus:outline-none focus:border-rose-500">
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse" id="studentTable">
+        <div class="panel">
+            <div class="panel-header" th:text="'📋 Chronological Student Admission Log Registry (' + ${clinicLogsCount} + ' Entries Today)'">📋 Chronological Student Admission Log Registry (0)</div>
+            <div class="table-wrap">
+                <table class="clinic-table">
                     <thead>
-                        <tr class="bg-gray-700 text-gray-300 text-xs font-semibold uppercase tracking-wider">
-                            <th class="p-4">LRN</th>
-                            <th class="p-4">Student Name</th>
-                            <th class="p-4">Section</th>
-                            <th class="p-4">Medical Status</th>
-                            <th class="p-4 text-center">Actions</th>
+                        <tr>
+                            <th>Student Mapping LRN</th>
+                            <th>Student Demographics Name</th>
+                            <th>Primary Complaint / Treatment Diagnosis</th>
+                            <th>Official Assessment Timestamp</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-700 text-sm">
-                        <tr th:each="student : ${students}" class="hover:bg-gray-750 transition">
-                            <td class="p-4 font-mono text-gray-300" th:text="${student.lrn}">101234567890</td>
-                            <td class="p-4 font-semibold text-white" th:text="${student.name}">Juan Dela Cruz</td>
-                            <td class="p-4 text-gray-400" th:text="${student.section}">Grade 10 - Emerald</td>
-                            <td class="p-4">
-                                <span th:if="${student.nurseClearance == 'CLEARED'}" class="px-2.5 py-1 text-xs font-bold bg-rose-950 text-rose-400 rounded-full border border-rose-800">CLEARED</span>
-                                <span th:if="${student.nurseClearance == 'PENDING'}" class="px-2.5 py-1 text-xs font-bold bg-yellow-950 text-yellow-400 rounded-full border border-yellow-800">PENDING</span>
-                                <span th:if="${student.nurseClearance == 'UNCLEARED'}" class="px-2.5 py-1 text-xs font-bold bg-red-950 text-red-400 rounded-full border border-red-800">UNCLEARED</span>
+                    <tbody>
+                        <tr th:each="log : ${clinicLogs}">
+                            <td th:text="${log.studentLrn}" style="font-family: monospace; font-weight: 600; color: #475569;"></td>
+                            <td class="patient-name" th:text="${log.studentName}"></td>
+                            <td>
+                                <span class="medical-reason-bubble" th:text="${log.reason}"></span>
                             </td>
-                            <td class="p-4">
-                                <div class="flex items-center justify-center gap-2">
-                                    <form th:action="@{/nurse/update-clearance}" method="POST" class="inline-block">
-                                        <input type="hidden" name="lrn" th:value="${student.lrn}">
-                                        <input type="hidden" name="status" value="CLEARED">
-                                        <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded transition">Clear</button>
-                                    </form>
-                                    <form th:action="@{/nurse/update-clearance}" method="POST" class="inline-block">
-                                        <input type="hidden" name="lrn" th:value="${student.lrn}">
-                                        <input type="hidden" name="status" value="UNCLEARED">
-                                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded transition">Unclear</button>
-                                    </form>
-                                </div>
+                            <td>
+                                <span class="timestamp-badge" th:text="${#temporals.format(log.loggedAt, 'yyyy-MM-dd | hh:mm a')}"></span>
                             </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(clinicLogs)}">
+                            <td colspan="4" style="text-align: center; color: #94a3b8; padding: 40px;">No patient admissions have been recorded in the system logs today.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
-    <script>
-        // Synchronized live search filter function
-        function filterTable() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const table = document.getElementById('studentTable');
-            const tr = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < tr.length; i++) {
-                let matchFound = false;
-                const tds = tr[i].getElementsByTagName('td');
-                for(let j = 0; j < 3; j++) {
-                    if (tds[j] && tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
-                        matchFound = true;
-                    }
-                }
-                tr[i].style.display = matchFound ? "" : "none";
-            }
-        }
-    </script>
 </body>
 </html>
