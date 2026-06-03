@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Science Lab Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans leading-normal tracking-normal">
+
+    <nav class="bg-blue-900 p-4 shadow-md text-white flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-flask text-2xl text-blue-300"></i>
+            <span class="font-bold text-xl tracking-wider">LINHS Portal | Science Lab Admin</span>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="text-right">
+                <p class="text-sm font-semibold" th:text="${userName}">Lab Administrator</p>
+                <p class="text-xs text-blue-200" th:text="${userEmail}">lab@linhs.edu.ph</p>
+            </div>
+            <a href="/logout" class="bg-red-600 hover:bg-red-700 text-xs px-4 py-2 rounded shadow transition">
+                <i class="fas fa-sign-out-alt mr-1"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6 max-w-7xl">
+        
+        <div th:if="${param.success}" class="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-sm flex items-center">
+            <i class="fas fa-check-circle mr-2 text-lg"></i>
+            <span>Action completed and transaction registry synced successfully.</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Active Liabilities Out</p>
+                    <h3 class="text-3xl font-black text-gray-800 mt-1" th:text="${activeBorrowsCount}">0</h3>
+                </div>
+                <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full"><i class="fas fa-hand-holding-box text-xl"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Pending Student Clearance</p>
+                    <h3 class="text-3xl font-black text-red-600 mt-1" th:text="${pendingCount}">0</h3>
+                </div>
+                <div class="p-3 bg-red-100 text-red-600 rounded-full"><i class="fas fa-exclamation-triangle text-xl"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Cleared Status Accounts</p>
+                    <h3 class="text-3xl font-black text-green-600 mt-1" th:text="${clearedCount}">0</h3>
+                </div>
+                <div class="p-3 bg-green-100 text-green-600 rounded-full"><i class="fas fa-user-check text-xl"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Enrolled Profiles</p>
+                    <h3 class="text-3xl font-black text-blue-600 mt-1" th:text="${totalCount}">0</h3>
+                </div>
+                <div class="p-3 bg-blue-100 text-blue-600 rounded-full"><i class="fas fa-users text-xl"></i></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full">
+                <div class="border-b border-gray-100 pb-4 mb-4">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-clipboard-list mr-2 text-blue-600"></i> New Borrow Record Entry
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-1">Assign an active equipment liability account to a student ledger.</p>
+                </div>
+                
+                <form action="/lab/borrow" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Student LRN (ID Key)</label>
+                        <input type="number" name="lrn" placeholder="Enter student LRN identifier" required
+                               class="w-full text-sm bg-gray-50 border border-gray-200 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Equipment Name Choice</label>
+                        <select name="equipmentName" required
+                                class="w-full text-sm bg-gray-50 border border-gray-200 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="" disabled selected>-- Select Equipment From Lab Inventory --</option>
+                            <option value="Calculator">Calculator</option>
+                            <option value="Models (body system)">Models (body system)</option>
+                            <option value="Models (planets)">Models (planets)</option>
+                            <option value="Microscope">Microscope</option>
+                            <optgroup label="Glass apparatus">
+                                <option value="Glass apparatus: Beaker">Beaker</option>
+                                <option value="Glass apparatus: Test tube">Test tube</option>
+                            </optgroup>
+                            <option value="Meter stick">Meter stick</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full text-sm bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition flex justify-center items-center">
+                        <i class="fas fa-exchange mr-2"></i> File Active Liability
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                <div class="border-b border-gray-100 pb-4 mb-4">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-hourglass-half mr-2 text-yellow-500"></i> Active Liabilities Inventory Tracking Ledger
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-1">Items currently out in circulation. Marking as returned automatically updates account status indicators.</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-400 font-bold text-xs uppercase tracking-wider border-b border-gray-100">
+                                <th class="p-3">Student Ledger Details</th>
+                                <th class="p-3">Lab Equipment Asset</th>
+                                <th class="p-3">Timestamp Out</th>
+                                <th class="p-3 text-right">Operational Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm divide-y divide-gray-100">
+                            <tr th:each="borrow : ${activeBorrows}" class="hover:bg-gray-50 transition">
+                                <td class="p-3">
+                                    <p class="font-bold text-gray-800" th:text="${borrow.studentName}">Student Name</p>
+                                    <p class="text-xs text-gray-400" th:text="'LRN: ' + ${borrow.lrn}">LRN</p>
+                                </td>
+                                <td class="p-3">
+                                    <span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded font-semibold border border-blue-100" th:text="${borrow.equipmentName}">Asset</span>
+                                </td>
+                                <td class="p-3 text-xs text-gray-500" th:text="${#temporals.format(borrow.borrowDate, 'yyyy-MM-dd HH:mm')}">Date</td>
+                                <td class="p-3 text-right">
+                                    <form action="/lab/return" method="POST" class="inline">
+                                        <input type="hidden" name="recordId" th:value="${borrow.id}">
+                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded shadow transition font-semibold">
+                                            <i class="fas fa-undo mr-1"></i> Mark Returned
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(activeBorrows)}">
+                                <td colspan="4" class="p-8 text-center text-gray-400 text-sm">
+                                    <i class="fas fa-box-open text-3xl mb-2 block text-gray-300"></i> No outstanding items found in active records. All clear!
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div class="border-b border-gray-100 pb-4 mb-4">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-user-shield mr-2 text-purple-600"></i> Student General Clearance Profile Records
+                </h2>
+                <p class="text-xs text-gray-400 mt-1">Manual status overwrite toggles for laboratory evaluation verification tracking.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 font-bold text-xs uppercase tracking-wider border-b border-gray-100">
+                            <th class="p-3">LRN</th>
+                            <th class="p-3">Full Name</th>
+                            <th class="p-3">Section</th>
+                            <th class="p-3">Current Status</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm divide-y divide-gray-100">
+                        <tr th:each="student : ${students}" class="hover:bg-gray-50 transition">
+                            <td class="p-3 font-mono text-xs font-bold text-gray-600" th:text="${student.lrn}">LRN</td>
+                            <td class="p-3 font-semibold text-gray-800" th:text="${student.name}">Name</td>
+                            <td class="p-3 text-gray-500 text-xs" th:text="${student.section}">Section</td>
+                            <td class="p-3">
+                                <span th:classappend="${student.labClearance == 'CLEARED' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}"
+                                      class="px-2.5 py-0.5 rounded-full text-xs font-bold border" th:text="${student.labClearance}">STATUS</span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <form action="/lab/update-clearance" method="POST" class="inline-flex space-x-2">
+                                    <input type="hidden" name="lrn" th:value="${student.lrn}">
+                                    <button type="submit" name="status" value="CLEARED" class="bg-green-50 hover:bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded border border-green-200 font-bold transition">
+                                        Clear Account
+                                    </button>
+                                    <button type="submit" name="status" value="PENDING" class="bg-red-50 hover:bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded border border-red-200 font-bold transition">
+                                        Hold Account
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

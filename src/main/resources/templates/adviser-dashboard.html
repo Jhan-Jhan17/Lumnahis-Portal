@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>LINHS Portal | Classroom Adviser Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f8; color: #333; min-height: 100vh; padding-bottom: 40px; }
+        
+        /* Dark Green Corporate Accent Identity Header */
+        .dashboard-header { background-color: #064e3b; color: white; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .portal-title { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; }
+        .user-meta { display: flex; align-items: center; gap: 20px; }
+        .profile-info { text-align: right; }
+        .profile-name { font-weight: 600; font-size: 15px; }
+        .profile-role { font-size: 12px; color: #a7f3d0; opacity: 0.9; }
+        .logout-btn { background-color: #dc2626; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 14px; border-radius: 6px; transition: background 0.2s; }
+        .logout-btn:hover { background-color: #b91c1c; }
+
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 30px; }
+
+        /* Statistics Metric row box block layout styles */
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .metric-card { background: white; padding: 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 5px solid #064e3b; }
+        .metric-card.section { border-left-color: #059669; }
+        .metric-card.count { border-left-color: #3b82f6; }
+        .metric-label { font-size: 12px; text-transform: uppercase; font-weight: 700; color: #6b7280; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .metric-value { font-size: 26px; font-weight: 800; color: #111827; }
+        .metric-icon { font-size: 28px; opacity: 0.2; }
+
+        /* Workspace Grid Splitting System */
+        .workspace-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; align-items: start; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
+        .card-title { font-size: 16px; font-weight: 700; color: #064e3b; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .card-subtitle { font-size: 13px; color: #6b7280; margin-top: -12px; margin-bottom: 20px; }
+
+        /* Form Entry Element UI styling controls */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; transition: border 0.15s; }
+        .form-control:focus { outline: none; border-color: #064e3b; box-shadow: 0 0 0 3px rgba(6, 78, 59, 0.1); }
+        .submit-btn { width: 100%; background-color: #064e3b; color: white; border: none; padding: 12px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
+        .submit-btn:hover { background-color: #043e2e; }
+
+        /* Structured Tables and Matrix Records UI rules layout */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 5px; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .data-table th { background-color: #f9fafb; color: #4b5563; font-weight: 600; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .data-table td { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #1f2937; vertical-align: middle; }
+        .data-table tr:hover { background-color: #f9fafb; }
+        
+        /* Dynamic Matrix Badges configuration profiles */
+        .badge { display: inline-flex; padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 50px; text-transform: uppercase; }
+        .badge.pending { background-color: #fee2e2; color: #ef4444; }
+        .badge.cleared { background-color: #d1fae5; color: #10b981; }
+
+        .select-action-toggle { padding: 6px 10px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; cursor: pointer; }
+        .apply-row-btn { background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; }
+        .apply-row-btn:hover { background-color: #e2e8f0; color: #0f172a; }
+        
+        .empty-placeholder { text-align: center; padding: 40px 0; color: #9ca3af; font-size: 14px; }
+        .alert-success { background-color: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-bottom: 5px; border: 1px solid #a7f3d0; }
+    </style>
+</head>
+<body>
+
+    <header class="dashboard-header">
+        <div class="portal-title">
+            <span>🏫</span> LINHS Portal | Classroom Adviser System
+        </div>
+        <div class="user-meta">
+            <div class="profile-info">
+                <div class="profile-name" th:text="${userName}">Robert De Gula</div>
+                <div class="profile-role" th:text="${roleName}">ADVISER</div>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div th:if="${param.success != null}" class="alert-success">
+            <span th:if="${param.success[0] == 'student_added'}">✔ Student profile created and linked to your section block. Initial evaluations initialized.</span>
+            <span th:if="${param.success[0] == 'clearance_updated'}">✔ Clearance metric status change updated successfully.</span>
+        </div>
+
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div>
+                    <div class="metric-label">Assigned Faculty Role</div>
+                    <div class="metric-value">Classroom Adviser</div>
+                </div>
+                <div class="metric-icon">🧑‍🏫</div>
+            </div>
+            <div class="metric-card section">
+                <div>
+                    <div class="metric-label">Managed Advisory Section Scope</div>
+                    <div class="metric-value" th:text="${session.assignedSection != null ? session.assignedSection : 'Unassigned'}">Grade 12 - Azurite</div>
+                </div>
+                <div class="metric-icon">🔖</div>
+            </div>
+            <div class="metric-card count">
+                <div>
+                    <div class="metric-label">Total Handled Enrolled Profiles</div>
+                    <div class="metric-value" th:text="${classCount}">0</div>
+                </div>
+                <div class="metric-icon">🎒</div>
+            </div>
+        </section>
+
+        <div class="workspace-grid">
+            
+            <div class="card">
+                <div class="card-title">➕ Add Student to Advisory Section</div>
+                <div class="card-subtitle">Create a managed section profile profile inside the system register.</div>
+                
+                <form action="/adviser/add-student" method="POST">
+                    <div class="form-group">
+                        <label for="lrn">Learner Reference Number (LRN Key)</label>
+                        <input type="number" id="lrn" name="lrn" class="form-control" placeholder="Unique 9 or 12 digit key..." required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="name">Student Complete Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="Last Name, First Name Middle..." required />
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <span>💾</span> Save & Initialize Profile
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📋 Multi-Department Clearance Compliance Matrix Ledger</div>
+                <div class="card-subtitle">Central tracking panel for checking student clearance status across departments.</div>
+                
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student Ledger LRN / Name</th>
+                                <th>Lab Dept</th>
+                                <th>Sports Dept</th>
+                                <th>Guidance Office</th>
+                                <th>Your Sign-Off Status Action Control</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student : ${classroomStudents}">
+                                <td>
+                                    <strong th:text="${student.name}">Student Complete Name</strong><br/>
+                                    <span style="font-family: monospace; font-size: 12px; color: #6b7280;" th:text="${student.lrn}">102938475</span>
+                                </td>
+                                <td>
+                                    <span th:class="'badge ' + ${#strings.toLowerCase(student.labClearance)}" th:text="${student.labClearance}">PENDING</span>
+                                </td>
+                                <td>
+                                    <span th:class="'badge ' + ${#strings.toLowerCase(student.sportsClearance)}" th:text="${student.sportsClearance}">PENDING</span>
+                                </td>
+                                <td>
+                                    <span th:class="'badge ' + ${#strings.toLowerCase(student.guidanceClearance)}" th:text="${student.guidanceClearance}">PENDING</span>
+                                </td>
+                                <td>
+                                    <form action="/adviser/update-clearance" method="POST" style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="hidden" name="lrn" th:value="${student.lrn}" />
+                                        <select name="status" class="select-action-toggle">
+                                            <option value="PENDING" th:selected="${student.adviserClearance == 'PENDING'}">PENDING</option>
+                                            <option value="CLEARED" th:selected="${student.adviserClearance == 'CLEARED'}">CLEARED</option>
+                                        </select>
+                                        <button type="submit" class="apply-row-btn">Apply</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(classroomStudents)}">
+                                <td colspan="5" class="empty-placeholder">
+                                    📭 No student profiles are currently mapped into this advisory section class register log index.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+
+    </div>
+
+</body>
+</html>
