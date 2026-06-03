@@ -58,14 +58,51 @@ public class PageController {
     @GetMapping("/gallery") public String galleryPage() { return "gallery"; }
     @GetMapping("/clearance") public String clearancePage() { return "clearance-status"; }
 
+    @GetMapping("/requests")
+    public String requestsPage() {
+        return "requests"; 
+    }
+
+    // --- UNIFIED SEARCH & LOOKUP MANAGEMENT SYSTEM ---
+
     @PostMapping("/search-clearance")
     public String searchClearance(@RequestParam("lrn") Long lrn, Model model) {
-        java.util.Optional<Student> studentOpt = studentRepository.findById(lrn);
-        if (studentOpt.isPresent()) {
-            model.addAttribute("student", studentOpt.get());
-        } else {
-            model.addAttribute("errorMessage", "No student record found for LRN: " + lrn);
+        return executeStudentLookup(lrn, model);
+    }
+
+    @GetMapping("/clearance/lookup")
+    public String checkClearance(@RequestParam(value = "lrn", required = false) Long lrn, Model model) {
+        if (lrn == null) {
+            return "redirect:/clearance";
         }
+        return executeStudentLookup(lrn, model);
+    }
+
+    /**
+     * Helper method to centralize validation logic, catch runtime errors, 
+     * and apply default "PENDING" strings to null clearance fields to prevent 500 errors.
+     */
+    private String executeStudentLookup(Long lrn, Model model) {
+        try {
+            Optional<Student> studentOpt = studentRepository.findById(lrn);
+            if (studentOpt.isPresent()) {
+                Student student = studentOpt.get();
+                
+                // CRITICAL SAFETY BALANCING: If any profile values are completely blank (null) in the DB ledger, 
+                // replace them with "PENDING" so Thymeleaf string manipulation methods do not throw NullPointerExceptions.
+                if (student.getAdviserClearance() == null) student.setAdviserClearance("PENDING");
+                if (student.getLabClearance() == null) student.setLabClearance("PENDING");
+                if (student.getSportsClearance() == null) student.setSportsClearance("PENDING");
+                if (student.getGuidanceClearance() == null) student.setGuidanceClearance("PENDING");
+                
+                model.addAttribute("student", student);
+            } else {
+                model.addAttribute("errorMessage", "No student record found for LRN: " + lrn);
+            }
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "An unexpected tracking system anomaly occurred: " + e.getMessage());
+        }
+        // Both mapping routes now render safely to clearance-status view
         return "clearance-status";
     }
 
@@ -404,7 +441,6 @@ public class PageController {
         populateModel(session, model);
         
         List<Student> allStudents = studentRepository.findAll();
-        // Group students dynamically by their Sections for easy targeted listing
         Map<String, List<Student>> studentsBySection = allStudents.stream()
                 .filter(s -> s.getSection() != null)
                 .collect(Collectors.groupingBy(Student::getSection));
@@ -426,8 +462,7 @@ public class PageController {
             FacilityLiability liability = new FacilityLiability(studentLrn, student.getName(), student.getSection(), itemDescription, LocalDateTime.now(), false);
             facilityLiabilityRepository.save(liability);
             
-            // Set clearance status inside profile framework mapping
-            student.setLabClearance("PENDING"); 
+            student.setLabClearance("PENDING");
             studentRepository.save(student);
         }
         return "redirect:/facilities-dashboard?success=liability_logged";

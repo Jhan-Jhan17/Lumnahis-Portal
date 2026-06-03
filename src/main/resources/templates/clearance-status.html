@@ -72,8 +72,8 @@
         
         <div class="search-card">
             <h2>Enter your Learner Reference Number</h2>
-            <form action="/search-clearance" method="POST" class="search-form">
-                <input type="number" name="lrn" class="search-input" placeholder="e.g., 102938475612" required autofocus />
+            <form action="/clearance/lookup" method="GET" class="search-form">
+                <input type="number" th:value="${student != null ? student.lrn : ''}" name="lrn" class="search-input" placeholder="e.g., 102938475612" required autofocus />
                 <button type="submit" class="search-btn">Check Status</button>
             </form>
         </div>
@@ -93,25 +93,29 @@
                 <div class="department-card">
                     <div class="dept-icon">👨‍🏫</div>
                     <div class="dept-name">Class Adviser</div>
-                    <div th:class="'status-badge ' + ${#strings.toLowerCase(student.adviserClearance)}" th:text="${student.adviserClearance}">PENDING</div>
+                    <div th:class="'status-badge ' + ${student.adviserClearance != null ? #strings.toLowerCase(student.adviserClearance) : 'pending'}" 
+                         th:text="${student.adviserClearance != null ? student.adviserClearance : 'PENDING'}">PENDING</div>
                 </div>
 
                 <div class="department-card">
                     <div class="dept-icon">🔬</div>
                     <div class="dept-name">Science Lab</div>
-                    <div th:class="'status-badge ' + ${#strings.toLowerCase(student.labClearance)}" th:text="${student.labClearance}">PENDING</div>
+                    <div th:class="'status-badge ' + ${student.labClearance != null ? #strings.toLowerCase(student.labClearance) : 'pending'}" 
+                         th:text="${student.labClearance != null ? student.labClearance : 'PENDING'}">PENDING</div>
                 </div>
 
                 <div class="department-card">
                     <div class="dept-icon">🏀</div>
                     <div class="dept-name">Sports & P.E.</div>
-                    <div th:class="'status-badge ' + ${#strings.toLowerCase(student.sportsClearance)}" th:text="${student.sportsClearance}">PENDING</div>
+                    <div th:class="'status-badge ' + ${student.sportsClearance != null ? #strings.toLowerCase(student.sportsClearance) : 'pending'}" 
+                         th:text="${student.sportsClearance != null ? student.sportsClearance : 'PENDING'}">PENDING</div>
                 </div>
 
                 <div class="department-card">
                     <div class="dept-icon">⚖️</div>
                     <div class="dept-name">Guidance Office</div>
-                    <div th:class="'status-badge ' + ${#strings.toLowerCase(student.guidanceClearance)}" th:text="${student.guidanceClearance}">PENDING</div>
+                    <div th:class="'status-badge ' + ${student.guidanceClearance != null ? #strings.toLowerCase(student.guidanceClearance) : 'pending'}" 
+                         th:text="${student.guidanceClearance != null ? student.guidanceClearance : 'PENDING'}">PENDING</div>
                 </div>
             </div>
 
