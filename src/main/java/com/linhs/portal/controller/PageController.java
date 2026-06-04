@@ -622,7 +622,8 @@ public class PageController {
         note.setContent(content);
         announcementRepository.save(note);
         
-        return "redirect:/principal-dashboard?success=posted";
+        // ADDED tab=announcements to tell the page where to go
+        return "redirect:/principal-dashboard?tab=announcements&success=posted";
     }
 
     @PostMapping("/admin/delete-announcement")
@@ -630,7 +631,8 @@ public class PageController {
         // FIXED: Now correctly checks for "ADMIN_PRINCIPAL"
         if (!isAuthorized(session, "ADMIN_PRINCIPAL")) return "redirect:/login"; 
         announcementRepository.deleteById(id);
-        return "redirect:/principal-dashboard?success=deleted";
+        // ADDED tab=announcements to tell the page where to go
+        return "redirect:/principal-dashboard?tab=announcements&success=posted";
     }
 
     @GetMapping("/principal-dashboard")
