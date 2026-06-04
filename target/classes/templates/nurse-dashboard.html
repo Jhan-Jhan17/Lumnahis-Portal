@@ -41,8 +41,10 @@
 <body>
     <nav class="navbar">
         <div class="brand">🩺 <span>LINHS Portal | Health & Clinic Clinic Management</span></div>
-        <a href="/logout" class="logout-btn">Logout</a>
+        <button onclick="openLogoutModal()" class="logout-btn">Logout</button>
     </nav>
+    <div th:replace="~{components :: logout-modal}"></div>
+    <th:block th:replace="~{components :: logout-js}"></th:block>
 
     <div class="container">
         <div class="panel">

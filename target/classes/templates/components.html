@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style th:fragment="notification-css">
+        .notification-wrapper { position: relative; display: flex; align-items: center; margin-right: 15px; }
+        .notification-btn { background: transparent; border: none; font-size: 22px; cursor: pointer; position: relative; padding: 4px; transition: transform 0.2s; }
+        .notification-btn:hover { transform: scale(1.1); }
+        .notification-badge { position: absolute; top: -2px; right: -4px; background-color: #ef4444; color: white; font-size: 10px; font-weight: 800; height: 16px; min-width: 16px; border-radius: 10px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #064e3b; }
+        .notification-dropdown { position: absolute; top: 45px; right: 0; width: 380px; max-height: 450px; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); border: 1px solid #e5e7eb; display: none; flex-direction: column; z-index: 2000; overflow: hidden; }
+        .notification-dropdown.active { display: flex; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .notif-header { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+        .notif-tabs { display: flex; padding: 0 16px; gap: 20px; }
+        .notif-tab { background: none; border: none; padding: 14px 0; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s; }
+        .notif-tab.active { color: #064e3b; border-bottom-color: #064e3b; }
+        .notif-tab:hover:not(.active) { color: #111827; }
+        .notif-actions { padding: 8px 16px; display: flex; justify-content: flex-end; background: white; border-bottom: 1px solid #f3f4f6; }
+        .mark-read-btn { font-size: 11px; color: #3b82f6; background: none; border: none; cursor: pointer; font-weight: 600; }
+        .mark-read-btn:hover { color: #2563eb; text-decoration: underline; }
+
+        /* Smooth Scrolling Container */
+        .notif-lists-container { 
+            flex-grow: 1;
+            overflow-y: auto; 
+            max-height: 350px; 
+            overscroll-behavior: contain; /* Prevents the main page from scrolling when you reach the bottom of the inbox */
+        }
+        
+        /* Sleek Custom Scrollbar */
+        .notif-lists-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .notif-lists-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .notif-lists-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+        .notif-lists-container::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+        .notif-list { display: none; flex-direction: column; }
+        .notif-list.active { display: flex; }
+        .notif-item { padding: 16px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s; display: flex; flex-direction: column; gap: 4px; text-align: left; }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background-color: #f0fdf4; border-left: 3px solid #10b981; }
+        .notif-title { font-size: 14px; font-weight: 700; color: #111827; }
+        .notif-date { font-size: 11px; color: #9ca3af; font-weight: 600; }
+        .notif-body { font-size: 13px; color: #4b5563; line-height: 1.5; margin-top: 4px; }
+        .notif-empty { padding: 40px 16px; text-align: center; color: #9ca3af; font-size: 13px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div th:fragment="notification-bell" class="notification-wrapper">
+        <button class="notification-btn" onclick="toggleNotifications()">
+            🔔<span class="notification-badge" id="notifBadge">0</span>
+        </button>
+
+        <div class="notification-dropdown" id="notifDropdown">
+            <div class="notif-header">
+                <div class="notif-tabs">
+                    <button class="notif-tab active" onclick="switchNotifTab(event, 'unread')">Unread (<span id="unreadCountText">0</span>)</button>
+                    <button class="notif-tab" onclick="switchNotifTab(event, 'read')">Read</button>
+                </div>
+            </div>
+            <div class="notif-actions">
+                <button class="mark-read-btn" onclick="markAllAsRead()">✔ Mark all as read</button>
+            </div>
+            
+            <div class="notif-lists-container">
+                <div id="unreadList" class="notif-list active"></div>
+                <div id="readList" class="notif-list"></div>
+            </div>
+        </div>
+
+        <div id="serverAnnouncements" style="display: none;">
+            <div th:each="note : ${announcements}" class="notif-item-source" th:data-id="${note.id}">
+                <div class="notif-title" th:text="${note.title}">Title</div>
+                <span class="notif-date" th:text="${#temporals.format(note.createdAt, 'MMM dd, yyyy - hh:mm a')}">Date</span>
+                <div class="notif-body" th:text="${note.content}">Content</div>
+            </div>
+        </div>
+    </div>
+
+    <div th:fragment="logout-modal" id="logoutConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; animation: fadeIn 0.2s;">
+            <div style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background-color: #fef2f2;">
+                <h3 style="font-size: 16px; font-weight: 700; color: #dc2626; margin: 0; display: flex; align-items: center; gap: 8px;"><span>⚠️</span> Confirm Logout</h3>
+                <button onclick="closeLogoutModal()" style="background: none; border: none; font-size: 24px; color: #9ca3af; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+            <div style="padding: 24px; color: #4b5563; font-size: 14px; text-align: center; line-height: 1.5;">
+                Are you sure you want to securely log out of the LINHS Portal? Any unsaved changes may be lost.
+            </div>
+            <div style="padding: 16px 24px; display: flex; gap: 12px; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                <button onclick="closeLogoutModal()" style="flex: 1; padding: 10px; background: white; border: 1px solid #d1d5db; border-radius: 6px; color: #374151; font-weight: 600; cursor: pointer; transition: background 0.2s;">Cancel</button>
+                <a href="/logout" style="flex: 1; padding: 10px; background: #dc2626; color: white; text-align: center; border-radius: 6px; font-weight: 600; text-decoration: none; transition: background 0.2s;">Yes, Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <script th:fragment="logout-js">
+        function openLogoutModal() {
+            const modal = document.getElementById('logoutConfirmModal');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutConfirmModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        // Closes the modal if the user clicks the dark background outside the box
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('logoutConfirmModal');
+            if (event.target === modal) {
+                closeLogoutModal();
+            }
+        });
+    </script>
+
+    <script th:fragment="notification-js">
+        let maxAnnouncementId = 0;
+        document.addEventListener('DOMContentLoaded', function() { renderNotifications(); });
+        function renderNotifications() {
+            const lastReadId = parseInt(localStorage.getItem('lastReadAnnouncementId') || '0');
+            const unreadList = document.getElementById('unreadList');
+            const readList = document.getElementById('readList');
+            const sources = document.querySelectorAll('.notif-item-source');
+            unreadList.innerHTML = ''; readList.innerHTML = ''; let unreadCount = 0;
+            sources.forEach(source => {
+                const id = parseInt(source.getAttribute('data-id'));
+                if (id > maxAnnouncementId) maxAnnouncementId = id;
+                const clone = source.cloneNode(true);
+                clone.classList.remove('notif-item-source'); clone.classList.add('notif-item');
+                if (id > lastReadId) { clone.classList.add('unread'); unreadList.appendChild(clone); unreadCount++; } 
+                else { readList.appendChild(clone); }
+            });
+            document.getElementById('unreadCountText').innerText = unreadCount;
+            const badge = document.getElementById('notifBadge');
+            if (unreadCount > 0) { badge.style.display = 'flex'; badge.innerText = unreadCount; } else { badge.style.display = 'none'; }
+            if (unreadCount === 0) { unreadList.innerHTML = '<div class="notif-empty">No unread announcements. You are all caught up! 🎉</div>'; }
+            if (readList.children.length === 0) { readList.innerHTML = '<div class="notif-empty">No older announcements available.</div>'; }
+        }
+        function toggleNotifications() { document.getElementById('notifDropdown').classList.toggle('active'); }
+        function switchNotifTab(event, tabName) {
+            document.querySelectorAll('.notif-list').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll('.notif-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabName + 'List').classList.add('active'); event.currentTarget.classList.add('active');
+        }
+        function markAllAsRead() { if (maxAnnouncementId > 0) { localStorage.setItem('lastReadAnnouncementId', maxAnnouncementId); renderNotifications(); } }
+        
+        // This attaches the close-dropdown feature without overwriting your existing window.onclicks
+        window.addEventListener('click', function(event) {
+            if (!event.target.closest('.notification-wrapper')) {
+                const dropdown = document.getElementById('notifDropdown');
+                if(dropdown && dropdown.classList.contains('active')) dropdown.classList.remove('active');
+            }
+        });
+    </script>
+
+</body>
+</html>

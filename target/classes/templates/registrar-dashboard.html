@@ -60,9 +60,12 @@
                 <div class="user-name" th:text="${userName}">Registrar Officer</div>
                 <div class="user-role">Document & Records Custodian</div>
             </div>
-            <a href="/logout" class="logout-btn">Logout</a>
+            <button onclick="openLogoutModal()" class="logout-btn">Logout</button>
         </div>
     </nav>
+    
+    <div th:replace="~{components :: logout-modal}"></div>
+    <th:block th:replace="~{components :: logout-js}"></th:block>
 
     <div class="container">
         <div class="stats-grid">

@@ -17,9 +17,9 @@ public class Announcement {
     private String content;
 
     private LocalDateTime createdAt = LocalDateTime.now();
-    private String author = "Office of the Principal";
 
-    // Standard Getters and Setters
+    // Constructors, Getters, Setters
+    public Announcement() {}
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

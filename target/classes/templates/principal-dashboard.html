@@ -14,7 +14,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('/lumbanglogo.jpg'); /* UPDATE THIS FILENAME IF NEEDED */
+            background-image: url('/lumbanglogo.jpg'); 
             background-size: 600px;
             background-position: center;
             background-repeat: no-repeat;
@@ -27,7 +27,7 @@
         /* Header */
         .admin-header { background-color: #161920; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262c3a; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .header-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; color: #f59e0b; }
-        .logout-btn { background-color: #dc2626; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 13px; border-radius: 6px; }
+        .logout-btn { background-color: #dc2626; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 13px; border-radius: 6px; border: none; cursor: pointer;}
         .logout-btn:hover { background-color: #b91c1c; }
 
         .container { max-width: 1400px; margin: 30px auto; padding: 0 30px; display: flex; flex-direction: column; gap: 30px; }
@@ -57,7 +57,7 @@
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; }
         .form-control { width: 100%; padding: 11px 14px; background-color: #0f1115; border: 1px solid #262c3a; border-radius: 6px; color: white; font-size: 14px; }
-        .save-btn { background-color: #f59e0b; border: none; color: #0f1115; padding: 10px 20px; font-size: 13px; font-weight: 700; border-radius: 6px; cursor: pointer; }
+        .save-btn { background-color: #f59e0b; border: none; color: #0f1115; padding: 10px 20px; font-size: 13px; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-block;}
         
         /* Directory Table */
         .directory-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
@@ -74,17 +74,17 @@
 </head>
 <body>
     
-    <!-- Background Logo Layer -->
     <div class="background-logo"></div>
 
     <header class="admin-header">
         <div class="header-brand">🏫 LINHS Admin Portal</div>
-        <a href="/logout" class="logout-btn">Logout</a>
+        <button onclick="openLogoutModal()" class="logout-btn">Logout</button>
     </header>
+    <div th:replace="~{components :: logout-modal}"></div>
+    <th:block th:replace="~{components :: logout-js}"></th:block>
 
     <div class="container">
         <div class="layout-wrapper">
-            <!-- Sidebar -->
             <div class="sidebar-nav">
                 <div class="sidebar-header">Command Center</div>
                 <button class="tab-btn active" onclick="switchTab(event, 'dashboard-home')">📊 Dashboard Home</button>
@@ -92,10 +92,8 @@
                 <button class="tab-btn" onclick="switchTab(event, 'faculty')">👥 Faculty Directory</button>
             </div>
 
-            <!-- Content Area -->
             <div class="main-content-area">
                 
-                <!-- Tab 1: Home/Dashboard -->
                 <div id="dashboard-home" class="tab-pane active">
                     <div class="welcome-hero">
                         <h1>Welcome back, <span th:text="${userName}">Principal</span></h1>
@@ -111,29 +109,40 @@
                     </div>
                 </div>
 
-                <!-- Tab 2: Announcements -->
                 <div id="announcements" class="tab-pane">
                     <h2 class="card-title">Manage Announcements</h2>
+                    
                     <form action="/admin/post-announcement" method="POST" style="margin-bottom: 40px;">
-                        <div class="form-group"><label>Title</label><input type="text" name="title" class="form-control" required></div>
-                        <div class="form-group"><label>Details</label><textarea name="content" class="form-control" rows="3" required></textarea></div>
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g., School Holiday" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Details</label>
+                            <textarea name="content" class="form-control" rows="3" placeholder="Write announcement details here..." required></textarea>
+                        </div>
                         <button type="submit" class="save-btn">Post to All Portals</button>
                     </form>
 
                     <h3 class="card-title" style="font-size: 14px;">Published Notices</h3>
-                    <div th:each="note : ${announcements}" style="padding: 15px; border: 1px solid #262c3a; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between;">
+                    
+                    <div th:if="${#lists.isEmpty(announcements)}" style="color: #94a3b8; font-style: italic; margin-bottom: 20px;">
+                        No announcements have been published yet.
+                    </div>
+                    
+                    <div th:each="note : ${announcements}" style="padding: 15px; border: 1px solid #262c3a; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start;">
                         <div>
-                            <strong th:text="${note.title}">Title</strong>
-                            <p style="font-size: 12px; color: #94a3b8;" th:text="${note.content}">Content...</p>
+                            <strong th:text="${note.title}" style="color: #f59e0b;">Title</strong>
+                            <p style="font-size: 13px; color: #cbd5e1; margin-top: 4px;" th:text="${note.content}">Content...</p>
+                            <span style="font-size: 11px; color: #64748b; margin-top: 8px; display: block;" th:text="${#temporals.format(note.createdAt, 'MMM dd, yyyy - hh:mm a')}">Date</span>
                         </div>
                         <form action="/admin/delete-announcement" method="POST">
                             <input type="hidden" name="id" th:value="${note.id}" />
-                            <button type="submit" class="logout-btn" style="padding: 4px 8px;">Remove</button>
+                            <button type="submit" class="logout-btn" style="padding: 4px 10px; font-size: 11px;">Remove</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Tab 3: Faculty -->
                 <div id="faculty" class="tab-pane">
                     <h2 class="card-title">Faculty & Management Directory</h2>
                     <table class="directory-table">
@@ -157,7 +166,6 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div class="modal-overlay-backdrop" id="editModal">
         <div class="modal-content-window">
             <div class="modal-title-bar">Edit Faculty Account</div>
@@ -176,12 +184,14 @@
 
     <script>
         document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
         function switchTab(event, tabId) {
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
         }
+        
         const modal = document.getElementById('editModal');
         function openEditor(id, name, email, section) {
             document.getElementById('edit-id').value = id;

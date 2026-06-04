@@ -12,7 +12,7 @@
 <body class="bg-darkBg text-white antialiased font-sans">
     <nav class="flex items-center justify-between px-8 py-4 border-b border-zinc-800 bg-darkBg/90 backdrop-blur sticky top-0 z-50 relative">
         <div class="flex items-center gap-3 w-1/3">
-            <div class="w-10 h-10 bg-emeraldAccent/20 rounded-full flex items-center justify-center border border-emeraldAccent/40 text-xs font-bold text-emeraldAccent">LINHS</div>
+            <img src="/lumbanglogo.jpg" alt="LINHS Logo" class="w-10 h-10 object-cover rounded-full">
             <div>
                 <h1 class="text-sm font-bold tracking-wide">LINHS</h1>
                 <p class="text-[10px] text-zinc-400">Lumbang Integrated NHS</p>
@@ -27,28 +27,30 @@
         </div>
         <div class="flex justify-end w-1/3">
             <a href="/teacher-portal" class="border border-emeraldAccent/30 text-emeraldAccent bg-emeraldAccent/5 hover:bg-emeraldAccent/20 px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
-                <span>→</span> Teacher Portal
+                <span>👨‍🏫</span> Teacher Portal
             </a>
         </div>
     </nav>
 
     <main class="max-w-4xl mx-auto px-4 py-16">
+
         <h2 class="text-3xl font-extrabold tracking-tight text-emeraldAccent mb-8">School Notice Board</h2>
         
         <div class="space-y-4">
-            <div class="bg-cardBg p-6 rounded-xl border border-zinc-800">
-                <span class="text-xs font-semibold text-goldAccent bg-goldAccent/10 px-2 py-1 rounded">Urgent</span>
-                <h3 class="text-lg font-bold mt-2">End of School Year Clearance Operations</h3>
-                <p class="text-sm text-zinc-400 mt-1">All students are advised to check their status dashboards via their LRN for pending departmental signatures.</p>
-                <span class="text-xs text-zinc-500 block mt-4">Posted on June 3, 2026</span>
-            </div>
             
-            <div class="bg-cardBg p-6 rounded-xl border border-zinc-800">
-                <span class="text-xs font-semibold text-emeraldAccent bg-emeraldAccent/10 px-2 py-1 rounded">Academic</span>
-                <h3 class="text-lg font-bold mt-2">Registrar Document Requests Processing Update</h3>
-                <p class="text-sm text-zinc-400 mt-1">Digital filing for Form 137 transcripts is now online. Expect fulfillment turnaround within 3-5 working days.</p>
-                <span class="text-xs text-zinc-500 block mt-4">Posted on May 28, 2026</span>
+            <!-- Shows if database is empty -->
+            <div th:if="${#lists.isEmpty(announcements)}" class="bg-cardBg p-6 rounded-xl border border-zinc-800 text-center text-zinc-500 italic">
+                No announcements have been published yet.
             </div>
+
+            <!-- Loops through database announcements -->
+            <div th:each="note : ${announcements}" class="bg-cardBg p-6 rounded-xl border border-zinc-800 hover:border-emeraldAccent/30 transition">
+                <span class="text-xs font-semibold text-emeraldAccent bg-emeraldAccent/10 px-2 py-1 rounded">Official Notice</span>
+                <h3 class="text-lg font-bold mt-2" th:text="${note.title}">Announcement Title</h3>
+                <p class="text-sm text-zinc-400 mt-2 whitespace-pre-wrap leading-relaxed" th:text="${note.content}">Announcement Content</p>
+                <span class="text-xs text-zinc-500 block mt-4" th:text="'Posted on ' + ${#temporals.format(note.createdAt, 'MMMM dd, yyyy - hh:mm a')}">Date</span>
+            </div>
+
         </div>
     </main>
 </body>

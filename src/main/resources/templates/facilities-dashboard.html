@@ -44,12 +44,16 @@
         .resolve-action-btn { background-color: #10b981; color: white; border: none; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; }
         .resolve-action-btn:hover { background-color: #059669; }
     </style>
+    <th:block th:replace="~{components :: notification-css}"></th:block>
 </head>
 <body>
     <nav class="navbar">
         <div class="brand">🏢 <span>LINHS Portal | Facilities & Property Management</span></div>
-        <a href="/logout" class="logout-btn">Logout</a>
+        <button onclick="openLogoutModal()" class="logout-btn">Logout</button>
     </nav>
+    
+    <div th:replace="~{components :: logout-modal}"></div>
+    <th:block th:replace="~{components :: logout-js}"></th:block>
 
     <div class="container">
         <div class="panel">

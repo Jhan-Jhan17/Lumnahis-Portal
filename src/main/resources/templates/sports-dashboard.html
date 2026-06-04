@@ -74,9 +74,12 @@
                 <div class="profile-name" th:text="${userName}">Ma'am Ghenalyn Campus</div>
                 <div class="profile-role" th:text="${roleName}">SPORTS_ADMIN</div>
             </div>
-            <a href="/logout" class="logout-btn">Logout</a>
+            <button onclick="openLogoutModal()" class="logout-btn">Logout</button>
         </div>
     </header>
+
+    <div th:replace="~{components :: logout-modal}"></div>
+    <th:block th:replace="~{components :: logout-js}"></th:block>
 
     <div class="container">
         
@@ -217,6 +220,5 @@
         </div>
 
     </div>
-
 </body>
 </html>

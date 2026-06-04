@@ -57,6 +57,7 @@
         .alert-box { background-color: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; border: 1px solid #a7f3d0; margin-bottom: 10px; }
         .search-bar { width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
     </style>
+    <th:block th:replace="~{components :: notification-css}"></th:block>
 </head>
 <body>
 
@@ -69,9 +70,12 @@
                 <div class="profile-name" th:text="${userName}">Counselor Name</div>
                 <div class="profile-role" th:text="${roleName}">GUIDANCE_COUNSELOR</div>
             </div>
-            <a href="/logout" class="logout-btn">Logout</a>
+            <button onclick="openLogoutModal()" class="logout-btn">Logout</button>
         </div>
     </header>
+    
+    <div th:replace="~{components :: logout-modal}"></div>
+    <th:block th:replace="~{components :: logout-js}"></th:block>
 
     <div class="container">
         
@@ -203,5 +207,8 @@
             }
         }
     </script>
+    
+    <div th:replace="~{components :: notification-bell}"></div>
+    <th:block th:replace="~{components :: notification-js}"></th:block>
 </body>
 </html>

@@ -106,19 +106,10 @@
         .modal-form-table td.input-cell { width: 30%; }
         .modal-form-table .form-control { padding: 8px 12px; font-size: 13px; }
     </style>
+    <th:block th:replace="~{components :: notification-css}"></th:block>
 </head>
 <body>
-
-    <div class="card" style="margin-bottom: 20px; border-left: 5px solid #dc2626;">
-        <div style="padding: 20px;">
-            <h3 style="color: #dc2626; font-size: 16px; margin-bottom: 10px;">📢 Principal's Announcements</h3>
-            <div th:each="note : ${announcements}" style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6;">
-                <strong th:text="${note.title}">Title</strong>
-                <p style="font-size: 13px; color: #4b5563;" th:text="${note.content}">Content...</p>
-                <small style="color: #9ca3af;" th:text="${#temporals.format(note.createdAt, 'MMM dd, yyyy HH:mm')}">Date</small>
-            </div>
-        </div>
-    </div>
+    <th:block th:replace="~{components :: notification-js}"></th:block>
 
     <div th:if="${param.success != null}" class="alert-success" id="successAlert">
         <span th:if="${param.success[0] == 'student_added'}">✔ Student profile created and linked to your section.</span>
@@ -132,13 +123,18 @@
             <span>🏫</span> LINHS Portal | Classroom Adviser System
         </div>
         <div class="user-meta">
+            <div th:replace="~{components :: notification-bell}"></div>
+
             <div class="profile-info">
                 <div class="profile-name" th:text="${userName}">Robert De Gula</div>
                 <div class="profile-role" th:text="${roleName}">ADVISER</div>
             </div>
-            <a href="/logout" class="logout-btn">Logout</a>
+            <button onclick="openLogoutModal()" class="logout-btn">Logout</button>
         </div>
     </header>
+    
+    <div th:replace="~{components :: logout-modal}"></div>
+    <th:block th:replace="~{components :: logout-js}"></th:block>
 
     <div class="container">
         
@@ -592,6 +588,43 @@
                 avgField.value = (total / count).toFixed(2);
             } else {
                 avgField.value = '';
+            }
+        }
+
+        // --- Notification Inbox Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const latestId = document.getElementById('latestNotifId').value;
+            const lastReadId = localStorage.getItem('lastReadAnnouncementId') || 0;
+            const badge = document.getElementById('notifBadge');
+            
+            // If the database has a newer announcement ID than what the user last saw, show the red dot!
+            if (parseInt(latestId) > parseInt(lastReadId) && parseInt(latestId) !== 0) {
+                badge.style.display = 'block';
+            }
+        });
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('active');
+            
+            // When opened, mark as read by saving the newest ID to browser memory
+            if (dropdown.classList.contains('active')) {
+                const latestId = document.getElementById('latestNotifId').value;
+                localStorage.setItem('lastReadAnnouncementId', latestId);
+                document.getElementById('notifBadge').style.display = 'none'; // Hide the red dot
+            }
+        }
+
+        // Overwrite your existing window.onclick to also close the dropdown when clicking outside of it
+        window.onclick = function(event) {
+            // Close Modals
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+            // Close Notification Inbox
+            if (!event.target.closest('.notification-wrapper')) {
+                document.getElementById('notifDropdown').classList.remove('active');
             }
         }
     </script>
