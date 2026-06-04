@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>LINHS Portal | Classroom Adviser Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f8; color: #333; min-height: 100vh; padding-bottom: 40px; }
+        
+        /* Header */
+        .dashboard-header { background-color: #064e3b; color: white; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .portal-title { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; }
+        .user-meta { display: flex; align-items: center; gap: 20px; }
+        .profile-info { text-align: right; }
+        .profile-name { font-weight: 600; font-size: 15px; }
+        .profile-role { font-size: 12px; color: #a7f3d0; opacity: 0.9; }
+        .logout-btn { background-color: #dc2626; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 14px; border-radius: 6px; transition: background 0.2s; border: none; cursor: pointer; display: inline-block; }
+        .logout-btn:hover { background-color: #b91c1c; }
+
+        .container { max-width: 1450px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 30px; }
+
+        /* Floating Toast Alert Notification */
+        .alert-success { 
+            background-color: #d1fae5; color: #065f46; padding: 14px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid #a7f3d0; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 9999;
+            transition: opacity 0.5s ease, top 0.5s ease; 
+        }
+
+        /* Metrics */
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .metric-card { background: white; padding: 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 5px solid #064e3b; }
+        .metric-card.section { border-left-color: #059669; }
+        .metric-card.count { border-left-color: #3b82f6; }
+        .metric-label { font-size: 12px; text-transform: uppercase; font-weight: 700; color: #6b7280; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .metric-value { font-size: 26px; font-weight: 800; color: #111827; }
+        .metric-icon { font-size: 28px; opacity: 0.2; }
+
+        /* Workspace & Sidebar */
+        .workspace-grid { display: grid; grid-template-columns: 1fr; gap: 25px; align-items: start; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; overflow: hidden; }
+        .layout-wrapper { display: flex; min-height: 650px; }
+        .sidebar-nav { width: 280px; background-color: #f9fafb; border-right: 1px solid #e5e7eb; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+        .sidebar-header { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-left: 12px; }
+        
+        .tab-btn { text-align: left; background-color: transparent; border: none; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #4b5563; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .tab-btn:hover { background-color: #f3f4f6; color: #111827; }
+        .tab-btn.active { background-color: #ecfdf5; color: #064e3b; box-shadow: inset 4px 0 0 #059669; }
+        
+        .main-content-area { flex: 1; padding: 32px; background-color: #ffffff; min-width: 0; }
+        .card-title { font-size: 18px; font-weight: 700; color: #064e3b; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .card-subtitle { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Forms & Tables */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; transition: border 0.15s; }
+        .form-control:focus { outline: none; border-color: #064e3b; box-shadow: 0 0 0 3px rgba(6, 78, 59, 0.1); }
+        .submit-btn { background-color: #064e3b; color: white; border: none; padding: 10px 18px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
+        .submit-btn.full-width { width: 100%; margin-top: 10px; padding: 12px; }
+        .submit-btn:hover { background-color: #043e2e; }
+
+        /* Enhanced responsive table for 8 subjects */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 5px; padding-bottom: 10px; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 900px; }
+        .data-table th { background-color: #f9fafb; color: #4b5563; font-weight: 600; padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; white-space: nowrap; }
+        .data-table td { padding: 12px 10px; border-bottom: 1px solid #f3f4f6; color: #1f2937; vertical-align: middle; }
+        .data-table tr:hover { background-color: #f9fafb; }
+        
+        .badge { display: inline-flex; padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 50px; text-transform: uppercase; }
+        .badge.pending { background-color: #fee2e2; color: #ef4444; }
+        .badge.cleared { background-color: #d1fae5; color: #10b981; }
+
+        .select-action-toggle { padding: 6px 10px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; cursor: pointer; }
+        .apply-row-btn { background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .apply-row-btn:hover { background-color: #e2e8f0; color: #0f172a; }
+        
+        .empty-placeholder { text-align: center; padding: 40px 0; color: #9ca3af; font-size: 14px; }
+        
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
+        
+        /* Default modal width */
+        .modal-content { background: white; width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        
+        /* Wider modal specifically for the Grades Table Form */
+        .modal-content.wide-modal { max-width: 600px; }
+        
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 700; color: #064e3b; display: flex; align-items: center; gap: 8px; }
+        .close-modal-btn { background: none; border: none; font-size: 24px; color: #9ca3af; cursor: pointer; line-height: 1; transition: color 0.2s; }
+        .close-modal-btn:hover { color: #111827; }
+        .modal-body { padding: 24px; }
+        
+        .search-bar { padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 250px; transition: all 0.2s; }
+        .search-bar:focus { outline: none; border-color: #064e3b; box-shadow: 0 0 0 3px rgba(6, 78, 59, 0.1); width: 280px; }
+
+        /* Specific styles for the internal Modal Table */
+        .modal-form-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .modal-form-table td { padding: 8px; vertical-align: middle; border-bottom: 1px solid #f3f4f6; }
+        .modal-form-table td.label-cell { font-size: 13px; font-weight: 600; color: #374151; width: 20%; background-color: #f9fafb; border-radius: 6px 0 0 6px; }
+        .modal-form-table td.input-cell { width: 30%; }
+        .modal-form-table .form-control { padding: 8px 12px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div th:if="${param.success != null}" class="alert-success" id="successAlert">
+        <span th:if="${param.success[0] == 'student_added'}">✔ Student profile created and linked to your section.</span>
+        <span th:if="${param.success[0] == 'clearance_updated'}">✔ Clearance metric status updated successfully.</span>
+        <span th:if="${param.success[0] == 'student_deleted'}">✔ Student record successfully removed from the system.</span>
+        <span th:if="${param.success[0] == 'grades_updated'}">✔ Academic grades successfully updated in the ledger.</span>
+    </div>
+
+    <header class="dashboard-header">
+        <div class="portal-title">
+            <span>🏫</span> LINHS Portal | Classroom Adviser System
+        </div>
+        <div class="user-meta">
+            <div class="profile-info">
+                <div class="profile-name" th:text="${userName}">Robert De Gula</div>
+                <div class="profile-role" th:text="${roleName}">ADVISER</div>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div>
+                    <div class="metric-label">Assigned Faculty Role</div>
+                    <div class="metric-value">Classroom Adviser</div>
+                </div>
+                <div class="metric-icon">🧑‍🏫</div>
+            </div>
+            <div class="metric-card section">
+                <div>
+                    <div class="metric-label">Managed Advisory Section Scope</div>
+                    <div class="metric-value" th:text="${session.assignedSection != null ? session.assignedSection : 'Unassigned'}">Grade 12 - Azurite</div>
+                </div>
+                <div class="metric-icon">🔖</div>
+            </div>
+            <div class="metric-card count">
+                <div>
+                    <div class="metric-label">Total Handled Enrolled Profiles</div>
+                    <div class="metric-value" th:text="${classCount}">0</div>
+                </div>
+                <div class="metric-icon">🎒</div>
+            </div>
+        </section>
+
+        <div class="workspace-grid">
+            <div class="card">
+                <div class="layout-wrapper">
+                    
+                    <div class="sidebar-nav">
+                        <div class="sidebar-header">Main Menu</div>
+                        <button class="tab-btn active" onclick="switchTab(event, 'clearance-matrix')">
+                            <span style="font-size: 16px;">📋</span> Clearance Ledger
+                        </button>
+                        <button class="tab-btn" onclick="switchTab(event, 'grades-management')">
+                            <span style="font-size: 16px;">📊</span> Grades Ledger
+                        </button>
+                        <button class="tab-btn" onclick="switchTab(event, 'class-roster')">
+                            <span style="font-size: 16px;">👨‍🎓</span> My Class Roster
+                        </button>
+                    </div>
+                    
+                    <div class="main-content-area">
+                        
+                        <div id="clearance-matrix" class="tab-pane active">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <div class="card-title">Multi-Department Clearance Compliance</div>
+                                    <div class="card-subtitle">Central tracking panel for checking student clearance status.</div>
+                                </div>
+                                <input type="text" id="searchMatrix" onkeyup="filterTable('searchMatrix', 'matrixTbody')" class="search-bar" placeholder="🔍 Search student name or LRN..." />
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student Ledger LRN / Name</th>
+                                            <th>Lab Dept</th>
+                                            <th>Sports Dept</th>
+                                            <th>Guidance Office</th>
+                                            <th>Your Sign-Off Status Action Control</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="matrixTbody">
+                                        <tr th:each="student : ${classroomStudents}" class="filterable-row">
+                                            <td>
+                                                <strong th:text="${student.name}">Student Complete Name</strong><br/>
+                                                <span style="font-family: monospace; font-size: 12px; color: #6b7280;" th:text="${student.lrn}">102938475</span>
+                                            </td>
+                                            <td>
+                                                <span th:class="'badge ' + ${#strings.toLowerCase(student.labClearance != null ? student.labClearance : 'PENDING')}" th:text="${student.labClearance != null ? student.labClearance : 'PENDING'}">PENDING</span>
+                                            </td>
+                                            <td>
+                                                <span th:class="'badge ' + ${#strings.toLowerCase(student.sportsClearance != null ? student.sportsClearance : 'PENDING')}" th:text="${student.sportsClearance != null ? student.sportsClearance : 'PENDING'}">PENDING</span>
+                                            </td>
+                                            <td>
+                                                <span th:class="'badge ' + ${#strings.toLowerCase(student.guidanceClearance != null ? student.guidanceClearance : 'PENDING')}" th:text="${student.guidanceClearance != null ? student.guidanceClearance : 'PENDING'}">PENDING</span>
+                                            </td>
+                                            <td>
+                                                <form action="/adviser/update-clearance" method="POST" style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="hidden" name="lrn" th:value="${student.lrn}" />
+                                                    <select name="status" class="select-action-toggle">
+                                                        <option value="PENDING" th:selected="${student.adviserClearance == 'PENDING'}">PENDING</option>
+                                                        <option value="CLEARED" th:selected="${student.adviserClearance == 'CLEARED'}">CLEARED</option>
+                                                    </select>
+                                                    <button type="submit" class="apply-row-btn">Apply</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(classroomStudents)}" class="empty-placeholder no-filter">
+                                            <td colspan="5">📭 No student profiles are currently mapped into this advisory section.</td>
+                                        </tr>
+                                        <tr class="empty-placeholder no-match-row" style="display: none;">
+                                            <td colspan="5">📭 No student records match your search criteria.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="grades-management" class="tab-pane">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <div class="card-title">Classroom Grades Ledger</div>
+                                    <div class="card-subtitle">Monitor and update the academic performance of your advisory section across 8 subjects.</div>
+                                </div>
+                                <input type="text" id="searchGrades" onkeyup="filterTable('searchGrades', 'gradesTbody')" class="search-bar" placeholder="🔍 Search grades..." />
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student LRN / Name</th>
+                                            <th style="text-align: center;">Math</th>
+                                            <th style="text-align: center;">Science</th>
+                                            <th style="text-align: center;">English</th>
+                                            <th style="text-align: center;">Filipino</th>
+                                            <th style="text-align: center;">History</th>
+                                            <th style="text-align: center;">PE</th>
+                                            <th style="text-align: center;">TLE</th>
+                                            <th style="text-align: center;">Values</th>
+                                            <th style="text-align: center;">Gen. Avg</th>
+                                            <th style="text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="gradesTbody">
+                                        <tr th:each="student : ${classroomStudents}" class="filterable-row">
+                                            <td>
+                                                <strong th:text="${student.name}">Student Complete Name</strong><br/>
+                                                <span style="font-family: monospace; font-size: 11px; color: #6b7280;" th:text="${student.lrn}">102938475</span>
+                                            </td>
+                                            
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.mathGrade != null ? student.grade.mathGrade : '--'}">--</td>
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.scienceGrade != null ? student.grade.scienceGrade : '--'}">--</td>
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.englishGrade != null ? student.grade.englishGrade : '--'}">--</td>
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.filipinoGrade != null ? student.grade.filipinoGrade : '--'}">--</td>
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.historyGrade != null ? student.grade.historyGrade : '--'}">--</td>
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.peGrade != null ? student.grade.peGrade : '--'}">--</td>
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.tleGrade != null ? student.grade.tleGrade : '--'}">--</td>
+                                            <td style="text-align: center; font-weight: 600;" th:text="${student.grade != null and student.grade.valuesGrade != null ? student.grade.valuesGrade : '--'}">--</td>
+                                            
+                                            <td style="text-align: center; font-weight: 800; color: #064e3b;" th:text="${student.grade != null and student.grade.genAvg != null ? student.grade.genAvg : '--'}">--</td>
+                                            
+                                            <td style="text-align: center;">
+                                                <button type="button" class="apply-row-btn" 
+                                                        th:data-lrn="${student.lrn}" 
+                                                        th:data-name="${student.name}"
+                                                        th:data-math="${student.grade != null ? student.grade.mathGrade : ''}"
+                                                        th:data-science="${student.grade != null ? student.grade.scienceGrade : ''}"
+                                                        th:data-english="${student.grade != null ? student.grade.englishGrade : ''}"
+                                                        th:data-filipino="${student.grade != null ? student.grade.filipinoGrade : ''}"
+                                                        th:data-history="${student.grade != null ? student.grade.historyGrade : ''}"
+                                                        th:data-pe="${student.grade != null ? student.grade.peGrade : ''}"
+                                                        th:data-tle="${student.grade != null ? student.grade.tleGrade : ''}"
+                                                        th:data-values="${student.grade != null ? student.grade.valuesGrade : ''}"
+                                                        th:data-genavg="${student.grade != null ? student.grade.genAvg : ''}"
+                                                        onclick="openGradesModal(this)">
+                                                    📝 Edit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(classroomStudents)}" class="empty-placeholder no-filter">
+                                            <td colspan="11">📭 Your class roster is empty. Add students to manage their grades.</td>
+                                        </tr>
+                                        <tr class="empty-placeholder no-match-row" style="display: none;">
+                                            <td colspan="11">📭 No student records match your search criteria.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="class-roster" class="tab-pane">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <div class="card-title">Enrolled Students Roster</div>
+                                    <div class="card-subtitle">A dedicated list of all the students currently assigned to your section.</div>
+                                </div>
+                                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                                    <input type="text" id="searchRoster" onkeyup="filterTable('searchRoster', 'rosterTbody')" class="search-bar" placeholder="🔍 Search roster..." />
+                                    <button class="submit-btn" style="margin-top: 0;" onclick="openModal('addStudentModal')">
+                                        <span>➕</span> Add New Student
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Learner Reference Number (LRN)</th>
+                                            <th>Student Full Name</th>
+                                            <th>Assigned Section</th>
+                                            <th style="text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rosterTbody">
+                                        <tr th:each="student : ${classroomStudents}" class="filterable-row">
+                                            <td style="font-family: monospace; font-weight: 600; font-size: 13px;" th:text="${student.lrn}">102938475</td>
+                                            <td><strong th:text="${student.name}">Student Name</strong></td>
+                                            <td><span class="badge cleared" th:text="${student.section}">Section</span></td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="logout-btn" style="padding: 6px 12px; font-size: 11px; margin: 0;" 
+                                                        th:data-lrn="${student.lrn}" 
+                                                        onclick="openDeleteModal(this.getAttribute('data-lrn'))">
+                                                    🗑️ Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(classroomStudents)}" class="empty-placeholder no-filter">
+                                            <td colspan="4">📭 Your class roster is currently empty. Click "Add New Student" above.</td>
+                                        </tr>
+                                        <tr class="empty-placeholder no-match-row" style="display: none;">
+                                            <td colspan="4">📭 No student records match your search criteria.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editGradesModal" class="modal-overlay">
+        <div class="modal-content wide-modal">
+            <div class="modal-header">
+                <h3><span>📝</span> Update Student Grades</h3>
+                <button class="close-modal-btn" onclick="closeModal('editGradesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="card-subtitle" style="margin-bottom: 20px;">Input the latest quarterly grades for <strong id="gradesStudentName" style="color: #111827;">Student</strong>.</div>
+                
+                <form action="/adviser/update-grades" method="POST" id="gradesForm">
+                    <input type="hidden" id="gradesTargetLrn" name="lrn" value="" />
+                    
+                    <table class="modal-form-table">
+                        <tbody>
+                            <tr>
+                                <td class="label-cell">Math</td>
+                                <td class="input-cell"><input type="number" name="mathGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                                <td class="label-cell" style="border-left: 10px solid white;">History</td>
+                                <td class="input-cell"><input type="number" name="historyGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                            </tr>
+                            <tr>
+                                <td class="label-cell">Science</td>
+                                <td class="input-cell"><input type="number" name="scienceGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                                <td class="label-cell" style="border-left: 10px solid white;">PE</td>
+                                <td class="input-cell"><input type="number" name="peGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                            </tr>
+                            <tr>
+                                <td class="label-cell">English</td>
+                                <td class="input-cell"><input type="number" name="englishGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                                <td class="label-cell" style="border-left: 10px solid white;">TLE</td>
+                                <td class="input-cell"><input type="number" name="tleGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                            </tr>
+                            <tr>
+                                <td class="label-cell">Filipino</td>
+                                <td class="input-cell"><input type="number" name="filipinoGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                                <td class="label-cell" style="border-left: 10px solid white;">Values</td>
+                                <td class="input-cell"><input type="number" name="valuesGrade" class="form-control grade-input" placeholder="0-100" min="0" max="100" oninput="calculateAvg()"></td>
+                            </tr>
+                            <tr>
+                                <td class="label-cell" style="background-color: #ecfdf5; color: #064e3b; padding: 15px 8px;">Gen. Avg</td>
+                                <td class="input-cell" style="padding: 15px 8px;"><input type="number" name="genAvg" id="genAvgDisplay" class="form-control" readonly style="background: #f9fafb; font-weight: bold;"></td>
+                                <td colspan="2" style="background-color: white;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <button type="submit" class="submit-btn full-width"><span>💾</span> Save Academic Grades</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="addStudentModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><span>➕</span> Add Student to Section</h3>
+                <button class="close-modal-btn" onclick="closeModal('addStudentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="card-subtitle" style="margin-bottom: 20px;">Create a managed section profile inside the system register.</div>
+                
+                <form action="/adviser/add-student" method="POST">
+                    <div class="form-group">
+                        <label for="lrn">Learner Reference Number (LRN Key)</label>
+                        <input type="number" id="lrn" name="lrn" class="form-control" placeholder="Unique 9 or 12 digit key..." required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="name">Student Complete Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="Last Name, First Name Middle..." required />
+                    </div>
+                    
+                    <button type="submit" class="submit-btn full-width">
+                        <span>💾</span> Save & Initialize Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteStudentModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="color: #dc2626;"><span>⚠️</span> Confirm Deletion</h3>
+                <button class="close-modal-btn" onclick="closeModal('deleteStudentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="card-subtitle" style="margin-bottom: 20px;">Are you sure you want to permanently remove this student from your advisory section? This action cannot be undone.</div>
+                
+                <form action="/adviser/delete-student" method="POST" style="display: flex; gap: 10px; margin-top: 20px;">
+                    <input type="hidden" id="deleteTargetLrn" name="lrn" value="" />
+                    
+                    <button type="button" class="apply-row-btn" style="flex: 1; padding: 10px;" onclick="closeModal('deleteStudentModal')">Cancel</button>
+                    <button type="submit" class="logout-btn" style="flex: 1; padding: 10px; margin: 0;">Yes, Remove Student</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-hide success alert
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertBox = document.getElementById('successAlert');
+            if (alertBox) {
+                setTimeout(function() {
+                    alertBox.style.opacity = '0';
+                    alertBox.style.top = '0px'; 
+                    setTimeout(function() {
+                        alertBox.style.display = 'none';
+                    }, 500); 
+                }, 4000); 
+            }
+        });
+
+        function switchTab(event, tabId) {
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openDeleteModal(lrn) {
+            document.getElementById('deleteTargetLrn').value = lrn;
+            openModal('deleteStudentModal');
+        }
+
+        function openGradesModal(btn) {
+            // 1. Get data from the clicked button
+            const lrn = btn.getAttribute('data-lrn');
+            const name = btn.getAttribute('data-name');
+            
+            // 2. Set the ID and Name in the modal header
+            document.getElementById('gradesTargetLrn').value = lrn;
+            document.getElementById('gradesStudentName').innerText = name;
+            
+            // 3. Fill the inputs
+            document.querySelector('input[name="mathGrade"]').value = btn.getAttribute('data-math');
+            document.querySelector('input[name="scienceGrade"]').value = btn.getAttribute('data-science');
+            document.querySelector('input[name="englishGrade"]').value = btn.getAttribute('data-english');
+            document.querySelector('input[name="filipinoGrade"]').value = btn.getAttribute('data-filipino');
+            document.querySelector('input[name="historyGrade"]').value = btn.getAttribute('data-history');
+            document.querySelector('input[name="peGrade"]').value = btn.getAttribute('data-pe');
+            document.querySelector('input[name="tleGrade"]').value = btn.getAttribute('data-tle');
+            document.querySelector('input[name="valuesGrade"]').value = btn.getAttribute('data-values');
+            document.querySelector('input[name="genAvg"]').value = btn.getAttribute('data-genavg');
+            
+            // 4. Open the modal
+            openModal('editGradesModal');
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Live Search Filter Function
+        function filterTable(inputId, tbodyId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const tbody = document.getElementById(tbodyId);
+            const rows = tbody.getElementsByTagName('tr');
+            
+            let visibleCount = 0; 
+
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].classList.contains('no-filter') || rows[i].classList.contains('no-match-row')) {
+                    continue;
+                }
+                
+                const rowText = rows[i].textContent || rows[i].innerText;
+                
+                if (rowText.toLowerCase().indexOf(filter) > -1) {
+                    rows[i].style.display = "";
+                    visibleCount++; 
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+
+            const noMatchRow = tbody.querySelector('.no-match-row');
+            if (noMatchRow) {
+                if (visibleCount === 0 && filter !== "") {
+                    noMatchRow.style.display = "";
+                } else {
+                    noMatchRow.style.display = "none";
+                }
+            }
+        }
+
+        function calculateAvg() {
+            const inputs = document.querySelectorAll('.grade-input');
+            let total = 0;
+            let count = 0;
+
+            inputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    total += val;
+                    count++;
+                }
+            });
+
+            const avgField = document.getElementById('genAvgDisplay');
+            if (count > 0) {
+                avgField.value = (total / count).toFixed(2);
+            } else {
+                avgField.value = '';
+            }
+        }
+    </script>
+</body>
+</html>

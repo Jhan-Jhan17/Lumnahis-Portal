@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>LINHS Portal | Registrar Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Top Navigation Navbar */
+        .navbar { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); color: white; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+        .user-profile { display: flex; align-items: center; gap: 20px; }
+        .user-info { text-align: right; }
+        .user-name { font-weight: 600; font-size: 15px; }
+        .user-role { font-size: 12px; color: #ccfbf1; opacity: 0.9; }
+        .logout-btn { background-color: #ef4444; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 13px; border-radius: 6px; transition: background 0.2s; }
+        .logout-btn:hover { background-color: #dc2626; }
+
+        .container { max-width: 1600px; width: 100%; margin: 32px auto; padding: 0 24px; display: flex; flex-direction: column; gap: 32px; flex: 1; }
+        
+        /* High-Fidelity Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .stat-card { background: white; border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .stat-details h3 { font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+        .stat-details .number { font-size: 28px; font-weight: 800; color: #0f766e; }
+        .stat-icon { width: 56px; height: 56px; border-radius: 12px; background-color: #f0fdfa; color: #0f766e; display: flex; align-items: center; justify-content: center; }
+
+        /* Document Queue & Roster Panel Sections */
+        .panel { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); overflow: hidden; }
+        .panel-header { padding: 20px 24px; background: #fafafa; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 16px; font-weight: 700; color: #0f766e; display: flex; align-items: center; gap: 8px; }
+        
+        /* Search Box Form Controls */
+        .search-container { padding: 16px 24px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .search-bar { width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; transition: all 0.2s; outline: none; }
+        .search-bar:focus { border-color: #0f766e; box-shadow: 0 0 0 3px rgba(15,118,110,0.1); }
+
+        /* Responsive Data Tables Matrix */
+        .table-wrap { width: 100%; overflow-x: auto; }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .custom-table th { background-color: #f8fafc; color: #475569; font-weight: 600; padding: 14px 24px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .custom-table td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        .custom-table tr:hover { background-color: #f8fafc; }
+        
+        /* Actionable Buttons & Interactive Status Pills */
+        .complete-action-btn { background-color: #10b981; color: white; border: none; padding: 8px 16px; font-weight: 600; font-size: 12px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .complete-action-btn:hover { background-color: #059669; }
+        
+        .status-pill { display: inline-flex; align-items: center; padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 50px; letter-spacing: 0.5px; }
+        .status-pill.pending { background-color: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; }
+        .status-pill.cleared { background-color: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">📂 <span>LINHS Portal | Registrar Office</span></div>
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="user-name" th:text="${userName}">Registrar Officer</div>
+                <div class="user-role">Document & Records Custodian</div>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-details">
+                    <h3>Pending Requests</h3>
+                    <div class="number" th:text="${incomingRequestsCount}">0</div>
+                </div>
+                <div class="stat-icon">📥</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-details">
+                    <h3>Monitored Students</h3>
+                    <div class="number" th:text="${totalCount}">0</div>
+                </div>
+                <div class="stat-icon">🎓</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📥 Live Incoming Public Document Requests Queue</div>
+            </div>
+            <div class="table-wrap">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Student LRN</th>
+                            <th>Student Name</th>
+                            <th>Requested Document Form / Certificate Type</th>
+                            <th>Operational Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="req : ${incomingRequests}">
+                            <td th:text="${req.studentLrn}" style="font-family: monospace; font-weight: 600; color: #0f766e;"></td>
+                            <td th:text="${req.studentName}" style="font-weight: 600;"></td>
+                            <td th:text="${req.documentType}"></td>
+                            <td>
+                                <form action="/registrar/complete-request" method="POST" style="margin:0;">
+                                    <input type="hidden" name="requestId" th:value="${req.id}" />
+                                    <button type="submit" class="complete-action-btn">Process & Complete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(incomingRequests)}">
+                            <td colspan="4" style="text-align: center; color: #94a3b8; padding: 32px;">No documents are currently requested or waiting in the public tracking queue.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📊 Complete Cross-Department Clearance Status Matrix</div>
+            </div>
+            <div class="search-container">
+                <input type="text" id="rosterSearch" class="search-bar" placeholder="Filter student database entries by full name or LRN mapping string..." onkeyup="filterRosterTable()">
+            </div>
+            <div class="table-wrap">
+                <table class="custom-table" id="matrixTable">
+                    <thead>
+                        <tr>
+                            <th>Student LRN Mapping</th>
+                            <th>Student Full Name</th>
+                            <th>Assigned Section</th>
+                            <th>Adviser Status</th>
+                            <th>Lab Status</th>
+                            <th>Sports Status</th>
+                            <th>Guidance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="student : ${students}">
+                            <td th:text="${student.lrn}" style="font-family: monospace; color: #64748b;"></td>
+                            <td th:text="${student.name}" style="font-weight: 600;"></td>
+                            <td th:text="${student.section}"></td>
+                            <td><span th:class="'status-pill ' + ${#strings.toLowerCase(student.adviserClearance)}" th:text="${student.adviserClearance}"></span></td>
+                            <td><span th:class="'status-pill ' + ${#strings.toLowerCase(student.labClearance)}" th:text="${student.labClearance}"></span></td>
+                            <td><span th:class="'status-pill ' + ${#strings.toLowerCase(student.sportsClearance)}" th:text="${student.sportsClearance}"></span></td>
+                            <td><span th:class="'status-pill ' + ${#strings.toLowerCase(student.guidanceClearance)}" th:text="${student.guidanceClearance}"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterRosterTable() {
+            let val = document.getElementById("rosterSearch").value.toUpperCase();
+            let rows = document.getElementById("matrixTable").getElementsByTagName("tr");
+            for (let i = 1; i < rows.length; i++) {
+                let lrnCell = rows[i].cells[0].textContent || rows[i].cells[0].innerText;
+                let nameCell = rows[i].cells[1].textContent || rows[i].cells[1].innerText;
+                rows[i].style.display = (lrnCell.toUpperCase().includes(val) || nameCell.toUpperCase().includes(val)) ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>

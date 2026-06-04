@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINHS Portal - Authenticate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-green-bg: #090d0a;
+            --panel-green: #111612;
+            --accent-gold: #fbbf24;
+            --text-light: #ffffff;
+            --text-muted: #a1a1aa;
+            --emerald-label: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--dark-green-bg);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Full Screen Low Opacity Background Watermark Layer */
+        .watermark-bg {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .watermark-bg img {
+            width: 130vw;
+            max-width: 800px;
+            height: auto;
+            aspect-ratio: 1/1;
+            object-fit: contain;
+            opacity: 0.035;
+            mix-blend-mode: lighten;
+        }
+
+        .login-card {
+            background-color: var(--panel-green);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo-container {
+            width: 84px;
+            height: 84px;
+            background-color: #090d0a;
+            border-radius: 50%;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        h2 {
+            margin-bottom: 6px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 24px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 28px;
+        }
+
+        .alert {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+        }
+
+        .alert-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--emerald-label);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 16px;
+            background-color: #090d0a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--emerald-label);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent-gold);
+            color: #090d0a;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.1);
+        }
+
+        .btn-submit:hover {
+            background-color: #f59e0b;
+            transform: translateY(-1px);
+        }
+        
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* NEW: Secondary Back Button Styles */
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-light);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="watermark-bg">
+        <img src="/lumbanglogo.jpg" alt="Watermark Background">
+    </div>
+
+    <div class="login-card">
+        
+        <div class="logo-container">
+            <img src="/lumbanglogo.jpg" alt="LINHS Emblem">
+        </div>
+            
+        <h2>LINHS Portal</h2>
+        <p class="subtitle">Sign in to access your administrative dashboard</p>
+
+        <div class="alert alert-success" th:if="${logoutMessage}" th:text="${logoutMessage}"></div>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <form th:action="@{/login}" method="POST">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required autocomplete="username" placeholder="yourname@domain.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Security Password</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn-submit">Authenticate Identity</button>
+        </form>
+        
+        <a href="/" class="btn-back">&larr; Return to Homepage</a>
+        
+    </div>
+
+</body>
+</html>
