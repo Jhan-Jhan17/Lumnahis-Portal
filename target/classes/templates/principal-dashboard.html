@@ -5,159 +5,167 @@
     <title>LINHS Admin Portal | Principal Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f1115; color: #e2e8f0; min-height: 100vh; padding-bottom: 60px; position: relative; }
         
-        /* Fixed broken clipping viewport layout issues via self-stretching containers */
-        body { background-color: #0f1115; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 60px; }
+        /* Background Logo Layer */
+        .background-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/lumbanglogo.jpg'); /* UPDATE THIS FILENAME IF NEEDED */
+            background-size: 600px;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(15px);
+            opacity: 0.07;
+            z-index: -1;
+            pointer-events: none;
+        }
         
-        /* Premium Dark Admin theme header navbar dashboard configuration */
-        .admin-header { background-color: #161920; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262c3a; }
+        /* Header */
+        .admin-header { background-color: #161920; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262c3a; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .header-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; color: #f59e0b; }
-        .meta-container { display: flex; align-items: center; gap: 20px; }
-        .meta-email { font-size: 14px; color: #94a3b8; }
-        .logout-btn { background-color: #dc2626; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 13px; border-radius: 6px; transition: background 0.2s; }
+        .logout-btn { background-color: #dc2626; color: white; text-decoration: none; padding: 8px 16px; font-weight: 600; font-size: 13px; border-radius: 6px; }
         .logout-btn:hover { background-color: #b91c1c; }
 
-        .dashboard-body-wrapper { max-width: 1400px; width: 100%; margin: 40px auto; padding: 0 30px; display: flex; flex-direction: column; gap: 35px; }
-        
-        .welcome-block h1 { font-size: 28px; font-weight: 800; color: #ffffff; }
-        .welcome-block h1 span { color: #f59e0b; }
-        .welcome-block p { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 30px; display: flex; flex-direction: column; gap: 30px; }
 
-        /* Statistics Counter Blocks Grid Layout */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
-        .stats-card { background-color: #161920; border: 1px solid #262c3a; padding: 26px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .stats-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .stats-value { font-size: 36px; font-weight: 800; color: #ffffff; }
-        .stats-icon-bg { background-color: #1e2330; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; border-radius: 8px; font-size: 20px; color: #f59e0b; }
+        /* Sidebar & Layout Wrapper */
+        .layout-wrapper { display: flex; min-height: 650px; background: rgba(22, 25, 32, 0.95); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid #262c3a; overflow: hidden; }
+        .sidebar-nav { width: 280px; background-color: #0f1115; border-right: 1px solid #262c3a; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px; }
+        .sidebar-header { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-left: 12px; }
+        
+        .tab-btn { text-align: left; background-color: transparent; border: none; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #94a3b8; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .tab-btn:hover { background-color: #1e2330; color: #ffffff; }
+        .tab-btn.active { background-color: #262c3a; color: #f59e0b; border-left: 4px solid #f59e0b; }
+        
+        .main-content-area { flex: 1; padding: 32px; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* FIXED: Table directory wrapper uses auto height properties to show all accounts */
-        .directory-panel-box { background-color: #161920; border: 1px solid #262c3a; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; height: auto; min-height: max-content; }
-        .panel-header { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        /* Dashboard Home Elements */
+        .welcome-hero { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(22, 25, 32, 0.1)); padding: 40px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #92400e; }
+        .welcome-hero h1 { font-size: 32px; color: #ffffff; margin-bottom: 8px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .stats-card { background-color: rgba(15, 17, 21, 0.6); padding: 20px; border-radius: 8px; border: 1px solid #262c3a; }
         
-        /* Table element structures grid configurations */
-        .responsive-table-holder { width: 100%; overflow-x: auto; }
-        .directory-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        .directory-table th { color: #64748b; font-weight: 700; padding: 14px 18px; border-bottom: 2px solid #262c3a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-        .directory-table td { padding: 16px 18px; border-bottom: 1px solid #1e2330; color: #cbd5e1; vertical-align: middle; }
-        .directory-table tr:hover { background-color: #1e2330; }
-        
-        .role-badge { display: inline-flex; padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; background-color: #262c3a; color: #94a3b8; }
-        .role-badge.principal { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .role-badge.adviser { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-        
-        .action-edit-trigger { background-color: #1e2330; border: 1px solid #334155; color: #cbd5e1; padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
-        .action-edit-trigger:hover { background-color: #334155; color: #ffffff; border-color: #475569; }
-
-        /* Modal Overlay Subsystem layout configuration */
-        .modal-overlay-backdrop { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 999; }
-        .modal-content-window { background-color: #161920; border: 1px solid #262c3a; width: 480px; padding: 30px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
-        .modal-title-bar { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 20px; }
-        
+        /* Cards */
+        .card-title { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 20px; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; }
         .form-control { width: 100%; padding: 11px 14px; background-color: #0f1115; border: 1px solid #262c3a; border-radius: 6px; color: white; font-size: 14px; }
-        .form-control:focus { outline: none; border-color: #f59e0b; }
-        
-        .modal-footer-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-        .cancel-btn { background-color: transparent; border: 1px solid #262c3a; color: #94a3b8; padding: 10px 18px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
-        .cancel-btn:hover { background-color: #1e2330; color: white; }
         .save-btn { background-color: #f59e0b; border: none; color: #0f1115; padding: 10px 20px; font-size: 13px; font-weight: 700; border-radius: 6px; cursor: pointer; }
-        .save-btn:hover { background-color: #d97706; }
+        
+        /* Directory Table */
+        .directory-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .directory-table th { color: #64748b; font-weight: 700; padding: 14px 18px; border-bottom: 2px solid #262c3a; text-transform: uppercase; font-size: 11px; }
+        .directory-table td { padding: 16px 18px; border-bottom: 1px solid #1e2330; color: #cbd5e1; }
+        .role-badge { display: inline-flex; padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; background-color: #262c3a; color: #94a3b8; }
+        .role-badge.principal { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .role-badge.adviser { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .action-edit-trigger { background-color: #1e2330; border: 1px solid #334155; color: #cbd5e1; padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; }
+        
+        .modal-overlay-backdrop { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 999; }
+        .modal-content-window { background-color: #161920; border: 1px solid #262c3a; width: 480px; padding: 30px; border-radius: 12px; }
     </style>
 </head>
 <body>
+    
+    <!-- Background Logo Layer -->
+    <div class="background-logo"></div>
 
     <header class="admin-header">
-        <div class="header-brand">
-            👑 LINHS Admin Portal
-        </div>
-        <div class="meta-container">
-            <span class="meta-email" th:text="${userEmail}">principal@linhs.edu.ph</span>
-            <a href="/logout" class="logout-btn">Logout</a>
-        </div>
+        <div class="header-brand">🏫 LINHS Admin Portal</div>
+        <a href="/logout" class="logout-btn">Logout</a>
     </header>
 
-    <div class="dashboard-body-wrapper">
-        
-        <div class="welcome-block">
-            <h1>Welcome, Principal <span th:text="${userName}">Randy Falculan</span></h1>
-            <p>Institutional Administration & Live Enrollment Distribution</p>
-        </div>
+    <div class="container">
+        <div class="layout-wrapper">
+            <!-- Sidebar -->
+            <div class="sidebar-nav">
+                <div class="sidebar-header">Command Center</div>
+                <button class="tab-btn active" onclick="switchTab(event, 'dashboard-home')">📊 Dashboard Home</button>
+                <button class="tab-btn" onclick="switchTab(event, 'announcements')">📢 Announcements</button>
+                <button class="tab-btn" onclick="switchTab(event, 'faculty')">👥 Faculty Directory</button>
+            </div>
 
-        <section class="stats-grid">
-            <div class="stats-card">
-                <div>
-                    <div class="stats-label">Total System Faculty / Admins</div>
-                    <div class="stats-value">8</div>
+            <!-- Content Area -->
+            <div class="main-content-area">
+                
+                <!-- Tab 1: Home/Dashboard -->
+                <div id="dashboard-home" class="tab-pane active">
+                    <div class="welcome-hero">
+                        <h1>Welcome back, <span th:text="${userName}">Principal</span></h1>
+                        <p id="dateDisplay"></p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stats-card">
+                            <div><div class="stats-label">Total System Faculty</div><div class="stats-value">8</div></div>
+                        </div>
+                        <div class="stats-card">
+                            <div><div class="stats-label">Enrolled Students</div><div class="stats-value" th:text="${totalStudents}">0</div></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stats-icon-bg">👤</div>
-            </div>
-            <div class="stats-card">
-                <div>
-                    <div class="stats-label">Total Enrolled Students Across Sections</div>
-                    <div class="stats-value">-</div>
-                </div>
-                <div class="stats-icon-bg">🎓</div>
-            </div>
-        </section>
 
-        <div class="directory-panel-box">
-            <div class="panel-header">📁 Faculty & Management Directory</div>
-            
-            <div class="responsive-table-holder">
-                <table class="directory-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email Address</th>
-                            <th>System Role</th>
-                            <th>Scope/Section</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="user : ${facultyList}">
-                            <td style="font-weight: 600; color: #ffffff;" th:text="${user.name}">Randy Falculan</td>
-                            <td th:text="${user.email}">principal@linhs.edu.ph</td>
-                            <td>
-                                <span th:class="'role-badge ' + ${user.role == 'ADMIN_PRINCIPAL' ? 'principal' : (user.role == 'ADVISER' ? 'adviser' : '')}"
-                                      th:text="${user.role}">ADMIN_PRINCIPAL</span>
-                            </td>
-                            <td th:text="${user.assignedSection}">None</td>
-                            <td>
-                                <button type="button" class="action-edit-trigger" 
-                                        th:onclick="openEditor([[${user.id}]], [[${user.name}]], [[${user.email}]], [[${user.assignedSection}]])">Edit</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Tab 2: Announcements -->
+                <div id="announcements" class="tab-pane">
+                    <h2 class="card-title">Manage Announcements</h2>
+                    <form action="/admin/post-announcement" method="POST" style="margin-bottom: 40px;">
+                        <div class="form-group"><label>Title</label><input type="text" name="title" class="form-control" required></div>
+                        <div class="form-group"><label>Details</label><textarea name="content" class="form-control" rows="3" required></textarea></div>
+                        <button type="submit" class="save-btn">Post to All Portals</button>
+                    </form>
+
+                    <h3 class="card-title" style="font-size: 14px;">Published Notices</h3>
+                    <div th:each="note : ${announcements}" style="padding: 15px; border: 1px solid #262c3a; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between;">
+                        <div>
+                            <strong th:text="${note.title}">Title</strong>
+                            <p style="font-size: 12px; color: #94a3b8;" th:text="${note.content}">Content...</p>
+                        </div>
+                        <form action="/admin/delete-announcement" method="POST">
+                            <input type="hidden" name="id" th:value="${note.id}" />
+                            <button type="submit" class="logout-btn" style="padding: 4px 8px;">Remove</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Faculty -->
+                <div id="faculty" class="tab-pane">
+                    <h2 class="card-title">Faculty & Management Directory</h2>
+                    <table class="directory-table">
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${facultyList}">
+                                <td th:text="${user.name}">Name</td>
+                                <td th:text="${user.email}">Email</td>
+                                <td><span class="role-badge" th:text="${user.role}">Role</span></td>
+                                <td>
+                                    <button type="button" class="action-edit-trigger" 
+                                            th:onclick="openEditor([[${user.id}]], [[${user.name}]], [[${user.email}]], [[${user.assignedSection}]])">Edit</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-
     </div>
 
+    <!-- Edit Modal -->
     <div class="modal-overlay-backdrop" id="editModal">
         <div class="modal-content-window">
-            <div class="modal-title-bar">✏️ Edit Faculty Account Profile</div>
-            
+            <div class="modal-title-bar">Edit Faculty Account</div>
             <form action="/principal/edit-faculty" method="POST">
                 <input type="hidden" id="edit-id" name="id" />
-                
-                <div class="form-group">
-                    <label for="edit-name">Complete Account Name</label>
-                    <input type="text" id="edit-name" name="name" class="form-control" required />
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit-email">Authorized Email Address</label>
-                    <input type="email" id="edit-email" name="email" class="form-control" required />
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit-section">Assigned Advisory Section Scope</label>
-                    <input type="text" id="edit-section" name="assignedSection" class="form-control" placeholder="e.g., Grade 12 - Azurite (or None)" />
-                </div>
-                
+                <div class="form-group"><label>Name</label><input type="text" id="edit-name" name="name" class="form-control" /></div>
+                <div class="form-group"><label>Email</label><input type="email" id="edit-email" name="email" class="form-control" /></div>
+                <div class="form-group"><label>Section</label><input type="text" id="edit-section" name="assignedSection" class="form-control" /></div>
                 <div class="modal-footer-actions">
                     <button type="button" class="cancel-btn" onclick="closeEditor()">Cancel</button>
                     <button type="submit" class="save-btn">Save Changes</button>
@@ -167,21 +175,22 @@
     </div>
 
     <script>
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
         const modal = document.getElementById('editModal');
         function openEditor(id, name, email, section) {
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-name').value = name;
             document.getElementById('edit-email').value = email;
-            document.getElementById('edit-section').value = (section === 'Not Assigned' || section === 'None') ? '' : section;
+            document.getElementById('edit-section').value = section;
             modal.style.display = 'flex';
         }
-        function closeEditor() {
-            modal.style.display = 'none';
-        }
-        window.onclick = function(event) {
-            if (event.target === modal) closeEditor();
-        }
+        function closeEditor() { modal.style.display = 'none'; }
     </script>
-
 </body>
 </html>

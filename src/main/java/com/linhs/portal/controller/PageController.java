@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.linhs.portal.model.Announcement;
 import com.linhs.portal.model.BorrowRecord;
 import com.linhs.portal.model.ClinicLog;
 import com.linhs.portal.model.DocumentRequest;
@@ -46,6 +48,9 @@ public class PageController {
     private final DocumentRequestRepository documentRequestRepository;
     private final ClinicLogRepository clinicLogRepository;
     private final FacilityLiabilityRepository facilityLiabilityRepository;
+
+    @Autowired
+    private com.linhs.portal.repository.AnnouncementRepository announcementRepository;
 
     public PageController(AuthService authService, 
                           UserRepository userRepository, 
@@ -598,6 +603,27 @@ public class PageController {
             studentRepository.save(student);
         }
         return "redirect:/adviser-dashboard?success=clearance_updated";
+    }
+
+    // --- PRINCIPAL ANNOUNCEMENT FEATURES ---
+    
+    @PostMapping("/admin/post-announcement")
+    public String postAnnouncement(@RequestParam String title, @RequestParam String content, HttpSession session) {
+        if (!isAuthorized(session, "PRINCIPAL")) return "redirect:/login";
+        
+        Announcement note = new Announcement();
+        note.setTitle(title);
+        note.setContent(content);
+        announcementRepository.save(note);
+        
+        return "redirect:/principal-dashboard?success=posted";
+    }
+
+    @PostMapping("/admin/delete-announcement")
+    public String deleteAnnouncement(@RequestParam Long id, HttpSession session) {
+        if (!isAuthorized(session, "PRINCIPAL")) return "redirect:/login";
+        announcementRepository.deleteById(id);
+        return "redirect:/principal-dashboard?success=deleted";
     }
 
     @GetMapping("/principal-dashboard")
