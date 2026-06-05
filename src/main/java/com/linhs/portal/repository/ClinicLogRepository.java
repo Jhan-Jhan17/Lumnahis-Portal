@@ -1,4 +1,9 @@
 package com.linhs.portal.repository;
+
 import com.linhs.portal.model.ClinicLog;
 import org.springframework.data.jpa.repository.JpaRepository;
-public interface ClinicLogRepository extends JpaRepository<ClinicLog, Long> {}
+import java.util.List;
+
+public interface ClinicLogRepository extends JpaRepository<ClinicLog, Long> {
+    List<ClinicLog> findAllByOrderByLoggedAtDesc();
+}

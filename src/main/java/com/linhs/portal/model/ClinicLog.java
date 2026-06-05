@@ -6,33 +6,55 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "clinic_logs")
 public class ClinicLog {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    private Long studentLrn;
+
+    @Column(name = "student_lrn", nullable = false)
+    private String studentLrn;
+
+    @Column(name = "student_name", nullable = false)
     private String studentName;
+
+    @Column(name = "reason", nullable = false, columnDefinition = "TEXT")
     private String reason;
+
+    // ---> ADDED THIS MISSING FIELD <---
+    @Column(name = "medicine_given")
+    private String medicineGiven;
+
+    @Column(name = "logged_at", nullable = false)
     private LocalDateTime loggedAt;
 
+    // Constructors
     public ClinicLog() {}
 
-    public ClinicLog(Long studentLrn, String studentName, String reason, LocalDateTime loggedAt) {
+    public ClinicLog(String studentLrn, String studentName, String reason, String medicineGiven, LocalDateTime loggedAt) {
         this.studentLrn = studentLrn;
         this.studentName = studentName;
         this.reason = reason;
+        this.medicineGiven = medicineGiven;
         this.loggedAt = loggedAt;
     }
 
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public Long getStudentLrn() { return studentLrn; }
-    public void setStudentLrn(Long studentLrn) { this.studentLrn = studentLrn; }
+
+    public String getStudentLrn() { return studentLrn; }
+    public void setStudentLrn(String studentLrn) { this.studentLrn = studentLrn; }
+
     public String getStudentName() { return studentName; }
     public void setStudentName(String studentName) { this.studentName = studentName; }
+
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }
+
+    // ---> ADDED PROPER GETTER AND SETTER <---
+    public String getMedicineGiven() { return medicineGiven; }
+    public void setMedicineGiven(String medicineGiven) { this.medicineGiven = medicineGiven; }
+
     public LocalDateTime getLoggedAt() { return loggedAt; }
     public void setLoggedAt(LocalDateTime loggedAt) { this.loggedAt = loggedAt; }
 }

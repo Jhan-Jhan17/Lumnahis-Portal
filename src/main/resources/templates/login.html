@@ -38,166 +38,174 @@
         /* Full Screen Low Opacity Background Watermark Layer */
         .watermark-bg {
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            opacity: 0.03;
             z-index: 0;
             pointer-events: none;
-            user-select: none;
         }
-
+        
         .watermark-bg img {
-            width: 130vw;
+            width: 80%;
             max-width: 800px;
-            height: auto;
-            aspect-ratio: 1/1;
             object-fit: contain;
-            opacity: 0.035;
-            mix-blend-mode: lighten;
+            filter: grayscale(100%);
         }
 
         .login-card {
             background-color: var(--panel-green);
-            padding: 40px;
-            border-radius: 16px;
+            padding: 3rem;
+            border-radius: 12px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             width: 100%;
             max-width: 420px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            z-index: 1;
             position: relative;
-            z-index: 10;
         }
 
         .logo-container {
-            width: 84px;
-            height: 84px;
-            background-color: #090d0a;
-            border-radius: 50%;
-            margin: 0 auto 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
 
         .logo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
         }
 
         h2 {
-            margin-bottom: 6px;
+            text-align: center;
             font-weight: 600;
+            margin-bottom: 0.5rem;
             letter-spacing: 0.5px;
-            font-size: 24px;
         }
 
-        p.subtitle {
+        .subtitle {
+            text-align: center;
             color: var(--text-muted);
-            font-size: 13px;
-            margin-bottom: 28px;
-        }
-
-        .alert {
-            padding: 12px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .alert-success {
-            background-color: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #34d399;
-        }
-
-        .alert-danger {
-            background-color: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #f87171;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
         }
 
         .form-group {
-            margin-bottom: 22px;
-            text-align: left;
+            margin-bottom: 1.25rem;
         }
 
         label {
             display: block;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--emerald-label);
-            margin-bottom: 8px;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 1px;
+            color: var(--emerald-label);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
         }
 
-        input {
+        input[type="email"],
+        input[type="password"] {
             width: 100%;
-            padding: 13px 16px;
-            background-color: #090d0a;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            color: white;
+            padding: 0.75rem 1rem;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: var(--text-light);
             font-family: inherit;
-            font-size: 14px;
-            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
         }
 
-        input:focus {
+        input[type="email"]:focus,
+        input[type="password"]:focus {
             outline: none;
             border-color: var(--emerald-label);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+            background-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
         .btn-submit {
             width: 100%;
-            padding: 14px;
-            background-color: var(--accent-gold);
-            color: #090d0a;
+            padding: 0.85rem;
+            margin-top: 1rem;
+            background-color: var(--emerald-label);
+            color: #000;
             border: none;
-            border-radius: 10px;
-            font-size: 15px;
+            border-radius: 6px;
             font-weight: 600;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.1);
+            transition: background-color 0.2s ease, transform 0.1s ease;
         }
 
         .btn-submit:hover {
-            background-color: #f59e0b;
-            transform: translateY(-1px);
+            background-color: #0ea5e9;
+            color: white;
         }
         
         .btn-submit:active {
-            transform: translateY(0);
+            transform: scale(0.98);
         }
 
-        /* NEW: Secondary Back Button Styles */
-        .btn-back {
+        .back-link {
             display: block;
-            width: 100%;
-            padding: 12px;
-            margin-top: 12px;
-            background-color: transparent;
+            text-align: center;
+            margin-top: 1.5rem;
             color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 0.85rem;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: color 0.2s;
         }
 
-        .btn-back:hover {
+        .back-link:hover {
+            color: var(--accent-gold);
+        }
+
+        .alert {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .alert-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        ::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #111612 inset !important;
+            -webkit-text-fill-color: var(--text-light) !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        
+        /* Apply border fix for autofill to blend in */
+        input:-webkit-autofill {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        input:-webkit-autofill:focus {
             background-color: rgba(255, 255, 255, 0.05);
             color: var(--text-light);
             border-color: rgba(255, 255, 255, 0.2);
@@ -225,7 +233,7 @@
         <form th:action="@{/login}" method="POST">
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required autocomplete="username" placeholder="yourname@domain.com">
+                <input type="email" id="email" name="username" required autocomplete="username" placeholder="yourname@domain.com">
             </div>
             
             <div class="form-group">
@@ -236,8 +244,7 @@
             <button type="submit" class="btn-submit">Authenticate Identity</button>
         </form>
         
-        <a href="/" class="btn-back">&larr; Return to Homepage</a>
-        
+        <a href="/" class="back-link">&larr; Return to Public Portal</a>
     </div>
 
 </body>

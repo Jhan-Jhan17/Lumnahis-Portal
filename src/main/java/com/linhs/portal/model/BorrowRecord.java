@@ -4,46 +4,75 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "borrow_records")
 public class BorrowRecord {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long lrn;
+    private String studentLrn;
     private String studentName;
-    private String equipmentName;
-    private LocalDateTime borrowDate;
-    private String status; // "BORROWED" or "RETURNED"
+    private String itemName;
+    private String status;
+    private LocalDateTime borrowedAt;
+    private LocalDateTime returnedAt;
 
-    // Constructors
-    public BorrowRecord() {}
+    public BorrowRecord() {
+    }
 
-    public BorrowRecord(Long lrn, String studentName, String equipmentName, LocalDateTime borrowDate, String status) {
-        this.lrn = lrn;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getStudentLrn() {
+        return studentLrn;
+    }
+
+    public void setStudentLrn(String studentLrn) {
+        this.studentLrn = studentLrn;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
         this.studentName = studentName;
-        this.equipmentName = equipmentName;
-        this.borrowDate = borrowDate;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
         this.status = status;
     }
 
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public LocalDateTime getBorrowedAt() {
+        return borrowedAt;
+    }
 
-    public Long getLrn() { return lrn; }
-    public void setLrn(Long lrn) { this.lrn = lrn; }
+    public void setBorrowedAt(LocalDateTime borrowedAt) {
+        this.borrowedAt = borrowedAt;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public LocalDateTime getReturnedAt() {
+        return returnedAt;
+    }
 
-    public String getEquipmentName() { return equipmentName; }
-    public void setEquipmentName(String equipmentName) { this.equipmentName = equipmentName; }
+    public void setReturnedAt(LocalDateTime returnedAt) {
+        this.returnedAt = returnedAt;
+    }
 
-    public LocalDateTime getBorrowDate() { return borrowDate; }
-    public void setBorrowDate(LocalDateTime borrowDate) { this.borrowDate = borrowDate; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 }

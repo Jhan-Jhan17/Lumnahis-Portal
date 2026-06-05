@@ -1,200 +1,246 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>Science Lab Admin Dashboard</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-gray-50 font-sans leading-normal tracking-normal">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratory Dashboard | LINHS Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --dark-bg: #0d0d0d;
+            --panel-bg: #161616;
+            --border-color: #2a2a2a;
+            --mint-green: #20c997;
+            --mint-hover: #1aa078;
+            --text-main: #ffffff;
+            /* Crisp absolute white */
+            --text-muted: #b5b5b5;
+            /* Lightened from dark gray to prevent fading */
+            --input-bg: #0a0a0a;
+            --accent-orange: #ff9800;
+        }
 
-    <nav class="bg-blue-900 p-4 shadow-md text-white flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <i class="fas fa-flask text-2xl text-blue-300"></i>
-            <span class="font-bold text-xl tracking-wider">LINHS Portal | Science Lab Admin</span>
-        </div>
-        <div class="flex items-center space-x-6">
-            <div class="text-right">
-                <p class="text-sm font-semibold" th:text="${userName}">Lab Administrator</p>
-                <p class="text-xs text-blue-200" th:text="${userEmail}">lab@linhs.edu.ph</p>
-            </div>
-            <a href="/logout" class="bg-red-600 hover:bg-red-700 text-xs px-4 py-2 rounded shadow transition">
-                <i class="fas fa-sign-out-alt mr-1"></i> Logout
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--dark-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .panel-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-control,
+        .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main) !important;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: var(--input-bg);
+            border-color: var(--mint-green);
+            color: var(--text-main) !important;
+            box-shadow: 0 0 0 0.25rem rgba(32, 201, 151, 0.25);
+        }
+
+        /* Forces clean dropdown background and white name text */
+        .form-select option {
+            background-color: var(--panel-bg) !important;
+            color: var(--text-main) !important;
+        }
+
+        .btn-mint {
+            background-color: var(--mint-green);
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .btn-mint:hover {
+            background-color: var(--mint-hover);
+            color: #fff !important;
+        }
+
+        .table {
+            color: var(--text-main);
+            border-color: var(--border-color);
+        }
+
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            color: var(--text-muted) !important;
+            border-bottom-width: 2px;
+        }
+
+        .table tbody td {
+            color: var(--text-main) !important;
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .section-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .section-btn.active {
+            background-color: rgba(32, 201, 151, 0.1);
+            border-color: var(--mint-green);
+            color: var(--mint-green);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <i class="fas fa-flask text-warning fs-4"></i>
+                <span class="fw-bold tracking-tight">LINHS <span
+                        class="text-warning text-xs font-mono">LABORATORY</span></span>
             </a>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end d-none d-md-block">
+                    <div class="text-sm font-semibold text-white" th:text="${adminName}">Laboratory Admin</div>
+                    <div class="text-xs text-muted">Science Lab Custodian</div>
+                </div>
+                <a href="/logout" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
+            </div>
         </div>
     </nav>
 
-    <div class="container mx-auto p-6 max-w-7xl">
-        
-        <div th:if="${param.success}" class="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-sm flex items-center">
-            <i class="fas fa-check-circle mr-2 text-lg"></i>
-            <span>Action completed and transaction registry synced successfully.</span>
+    <div class="dashboard-container">
+        <div th:if="${successMessage}"
+            class="alert alert-success alert-dismissible fade show bg-opacity-10 text-success border border-success"
+            role="alert">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}">Success message.</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Active Liabilities Out</p>
-                    <h3 class="text-3xl font-black text-gray-800 mt-1" th:text="${activeBorrowsCount}">0</h3>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="panel-card">
+                    <h5 class="mb-4 font-bold text-lg d-flex align-items-center gap-2"
+                        style="color: var(--mint-green);">
+                        <i class="fas fa-plus-circle"></i> Log Equipment Liability
+                    </h5>
+                    <form th:action="@{/lab/log}" method="POST">
+                        <input type="hidden" name="studentName" class="hiddenStudentName" value="" />
+                        <div class="mb-3">
+                            <label class="form-label text-xs font-semibold text-muted">Select Accountable
+                                Student</label>
+                            <select name="lrn" class="form-select select2-setup" onchange="updateHiddenName(this)"
+                                required>
+                                <option value="" disabled selected style="color: var(--text-muted);">Choose student
+                                    registry...</option>
+                                <option th:each="student : ${students}" th:value="${student.lrn}"
+                                    th:text="${student.name} + ' (' + ${student.lrn} + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-xs font-semibold text-muted">Equipment Accountability
+                                Liabilities</label>
+                            <textarea name="equipmentDetails" class="form-control" rows="4"
+                                placeholder="Specify laboratory apparatus, components, unreturned kits or items..."
+                                required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-mint w-100 py-2"><i
+                                class="fas fa-exclamation-triangle me-1"></i> File Lab Liability</button>
+                    </form>
                 </div>
-                <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full"><i class="fas fa-hand-holding-box text-xl"></i></div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Pending Student Clearance</p>
-                    <h3 class="text-3xl font-black text-red-600 mt-1" th:text="${pendingCount}">0</h3>
-                </div>
-                <div class="p-3 bg-red-100 text-red-600 rounded-full"><i class="fas fa-exclamation-triangle text-xl"></i></div>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Cleared Status Accounts</p>
-                    <h3 class="text-3xl font-black text-green-600 mt-1" th:text="${clearedCount}">0</h3>
-                </div>
-                <div class="p-3 bg-green-100 text-green-600 rounded-full"><i class="fas fa-user-check text-xl"></i></div>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Enrolled Profiles</p>
-                    <h3 class="text-3xl font-black text-blue-600 mt-1" th:text="${totalCount}">0</h3>
-                </div>
-                <div class="p-3 bg-blue-100 text-blue-600 rounded-full"><i class="fas fa-users text-xl"></i></div>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full">
-                <div class="border-b border-gray-100 pb-4 mb-4">
-                    <h2 class="text-lg font-bold text-gray-800 flex items-center">
-                        <i class="fas fa-clipboard-list mr-2 text-blue-600"></i> New Borrow Record Entry
-                    </h2>
-                    <p class="text-xs text-gray-400 mt-1">Assign an active equipment liability account to a student ledger.</p>
-                </div>
-                
-                <form action="/lab/borrow" method="POST" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Student LRN (ID Key)</label>
-                        <input type="number" name="lrn" placeholder="Enter student LRN identifier" required
-                               class="w-full text-sm bg-gray-50 border border-gray-200 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="m-0 fw-bold tracking-tight text-white">Active Laboratory Liability Matrix</h4>
+                    <div class="d-flex gap-2">
+                        <button class="section-btn active" id="btn-active" onclick="showSection('active')">Pending
+                            Liabilities</button>
                     </div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Equipment Name Choice</label>
-                        <select name="equipmentName" required
-                                class="w-full text-sm bg-gray-50 border border-gray-200 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="" disabled selected>-- Select Equipment From Lab Inventory --</option>
-                            <option value="Calculator">Calculator</option>
-                            <option value="Models (body system)">Models (body system)</option>
-                            <option value="Models (planets)">Models (planets)</option>
-                            <option value="Microscope">Microscope</option>
-                            <optgroup label="Glass apparatus">
-                                <option value="Glass apparatus: Beaker">Beaker</option>
-                                <option value="Glass apparatus: Test tube">Test tube</option>
-                            </optgroup>
-                            <option value="Meter stick">Meter stick</option>
-                        </select>
+                </div>
+
+                <div class="panel-card student-table-container" id="table-active">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle m-0">
+                            <thead>
+                                <tr>
+                                    <th>LRN</th>
+                                    <th>Student Name</th>
+                                    <th>Equipment Accountability Liabilities</th>
+                                    <th>Logged At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="log : ${activeBorrows}">
+                                    <td class="font-mono text-xs fw-bold" th:text="${log.lrn}"></td>
+                                    <td class="text-white fw-semibold" th:text="${log.studentName}"></td>
+                                    <td th:text="${log.equipmentDetails}"></td>
+                                    <td>
+                                        <span class="badge bg-info"
+                                            th:text="${log.loggedAt != null ? #temporals.format(log.loggedAt, 'yyyy-MM-dd | hh:mm a') : 'N/A'}"></span>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{/lab/clear}" method="POST">
+                                            <input type="hidden" name="id" th:value="${log.id}" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success"><i
+                                                    class="fas fa-check me-1"></i> Clear Liability</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(activeBorrows)}">
+                                    <td colspan="5" class="text-muted py-4 text-center">No pending laboratory equipment
+                                        liabilities.</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <button type="submit" class="w-full text-sm bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition flex justify-center items-center">
-                        <i class="fas fa-exchange mr-2"></i> File Active Liability
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
-                <div class="border-b border-gray-100 pb-4 mb-4">
-                    <h2 class="text-lg font-bold text-gray-800 flex items-center">
-                        <i class="fas fa-hourglass-half mr-2 text-yellow-500"></i> Active Liabilities Inventory Tracking Ledger
-                    </h2>
-                    <p class="text-xs text-gray-400 mt-1">Items currently out in circulation. Marking as returned automatically updates account status indicators.</p>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-400 font-bold text-xs uppercase tracking-wider border-b border-gray-100">
-                                <th class="p-3">Student Ledger Details</th>
-                                <th class="p-3">Lab Equipment Asset</th>
-                                <th class="p-3">Timestamp Out</th>
-                                <th class="p-3 text-right">Operational Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm divide-y divide-gray-100">
-                            <tr th:each="borrow : ${activeBorrows}" class="hover:bg-gray-50 transition">
-                                <td class="p-3">
-                                    <p class="font-bold text-gray-800" th:text="${borrow.studentName}">Student Name</p>
-                                    <p class="text-xs text-gray-400" th:text="'LRN: ' + ${borrow.lrn}">LRN</p>
-                                </td>
-                                <td class="p-3">
-                                    <span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded font-semibold border border-blue-100" th:text="${borrow.equipmentName}">Asset</span>
-                                </td>
-                                <td class="p-3 text-xs text-gray-500" th:text="${#temporals.format(borrow.borrowDate, 'yyyy-MM-dd HH:mm')}">Date</td>
-                                <td class="p-3 text-right">
-                                    <form action="/lab/return" method="POST" class="inline">
-                                        <input type="hidden" name="recordId" th:value="${borrow.id}">
-                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded shadow transition font-semibold">
-                                            <i class="fas fa-undo mr-1"></i> Mark Returned
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <tr th:if="${#lists.isEmpty(activeBorrows)}">
-                                <td colspan="4" class="p-8 text-center text-gray-400 text-sm">
-                                    <i class="fas fa-box-open text-3xl mb-2 block text-gray-300"></i> No outstanding items found in active records. All clear!
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="border-b border-gray-100 pb-4 mb-4">
-                <h2 class="text-lg font-bold text-gray-800 flex items-center">
-                    <i class="fas fa-user-shield mr-2 text-purple-600"></i> Student General Clearance Profile Records
-                </h2>
-                <p class="text-xs text-gray-400 mt-1">Manual status overwrite toggles for laboratory evaluation verification tracking.</p>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50 text-gray-400 font-bold text-xs uppercase tracking-wider border-b border-gray-100">
-                            <th class="p-3">LRN</th>
-                            <th class="p-3">Full Name</th>
-                            <th class="p-3">Section</th>
-                            <th class="p-3">Current Status</th>
-                            <th class="p-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm divide-y divide-gray-100">
-                        <tr th:each="student : ${students}" class="hover:bg-gray-50 transition">
-                            <td class="p-3 font-mono text-xs font-bold text-gray-600" th:text="${student.lrn}">LRN</td>
-                            <td class="p-3 font-semibold text-gray-800" th:text="${student.name}">Name</td>
-                            <td class="p-3 text-gray-500 text-xs" th:text="${student.section}">Section</td>
-                            <td class="p-3">
-                                <span th:classappend="${student.labClearance == 'CLEARED' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}"
-                                      class="px-2.5 py-0.5 rounded-full text-xs font-bold border" th:text="${student.labClearance}">STATUS</span>
-                            </td>
-                            <td class="p-3 text-right">
-                                <form action="/lab/update-clearance" method="POST" class="inline-flex space-x-2">
-                                    <input type="hidden" name="lrn" th:value="${student.lrn}">
-                                    <button type="submit" name="status" value="CLEARED" class="bg-green-50 hover:bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded border border-green-200 font-bold transition">
-                                        Clear Account
-                                    </button>
-                                    <button type="submit" name="status" value="PENDING" class="bg-red-50 hover:bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded border border-red-200 font-bold transition">
-                                        Hold Account
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.student-table-container').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.section-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('table-' + sectionId).style.display = 'block';
+            document.getElementById('btn-' + sectionId).classList.add('active');
+        }
+        function updateHiddenName(selectElement) {
+            const selectedText = selectElement.options[selectElement.selectedIndex].text;
+            const nameOnly = selectedText.substring(0, selectedText.lastIndexOf(' ('));
+            selectElement.closest('form').querySelector('.hiddenStudentName').value = nameOnly;
+        }
+    </script>
 </body>
+
 </html>

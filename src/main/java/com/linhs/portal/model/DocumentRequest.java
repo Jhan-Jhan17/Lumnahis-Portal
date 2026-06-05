@@ -6,37 +6,61 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "document_requests")
 public class DocumentRequest {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    private Long studentLrn;
+
+    @Column(name = "student_lrn", nullable = false)
+    private String studentLrn;
+
+    @Column(name = "student_name", nullable = false)
     private String studentName;
-    private String documentType;
+
+    @Column(name = "document_type", nullable = false)
+    private String documentType; // e.g., "FORM_137", "GOOD_MORAL", "DIPLOMA"
+
+    @Column(name = "status", nullable = false)
+    private String status = "PENDING"; // PENDING, READY, CLAIMED
+
+    @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt;
-    private boolean isCompleted;
 
     public DocumentRequest() {}
 
-    public DocumentRequest(Long studentLrn, String studentName, String documentType, LocalDateTime requestedAt, boolean isCompleted) {
-        this.studentLrn = studentLrn;
-        this.studentName = studentName;
-        this.documentType = documentType;
-        this.requestedAt = requestedAt;
-        this.isCompleted = isCompleted;
-    }
-
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public Long getStudentLrn() { return studentLrn; }
-    public void setStudentLrn(Long studentLrn) { this.studentLrn = studentLrn; }
+
+    public String getStudentLrn() { return studentLrn; }
+    public void setStudentLrn(String studentLrn) { this.studentLrn = studentLrn; }
+
     public String getStudentName() { return studentName; }
     public void setStudentName(String studentName) { this.studentName = studentName; }
+
     public String getDocumentType() { return documentType; }
     public void setDocumentType(String documentType) { this.documentType = documentType; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
     public LocalDateTime getRequestedAt() { return requestedAt; }
     public void setRequestedAt(LocalDateTime requestedAt) { this.requestedAt = requestedAt; }
-    public boolean getIsCompleted() { return isCompleted; }
-    public void setIsCompleted(boolean isCompleted) { this.isCompleted = isCompleted; }
+
+    // --- ALIAS METHODS TO SATISFY THE CONTROLLER ---
+
+    public LocalDateTime getLoggedAt() {
+        return requestedAt;
+    }
+
+    public void setLoggedAt(LocalDateTime loggedAt) {
+        this.requestedAt = loggedAt;
+    }
+
+    public String getDocumentDetails() {
+        return documentType;
+    }
+
+    public void setDocumentDetails(String documentDetails) {
+        this.documentType = documentDetails;
+    }
 }

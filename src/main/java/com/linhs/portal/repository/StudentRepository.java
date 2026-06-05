@@ -2,9 +2,17 @@ package com.linhs.portal.repository;
 
 import com.linhs.portal.model.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
 
-@Repository
-// FIXED: Second generic parameter matches the explicit type profile of Student ID (@Id Long)
-public interface StudentRepository extends JpaRepository<Student, Long> {
+public interface StudentRepository extends JpaRepository<Student, String> {
+    List<Student> findBySection(String section);
+
+    List<Student> findAllByOrderByNameAsc();
+
+    // --- BRIDGE METHOD TO FIX THE CONTROLLER RED LINES ---
+    // Redirects studentRepository.findByLrn(lrn) calls to the built-in findById()
+    default Optional<Student> findByLrn(String lrn) {
+        return findById(lrn);
+    }
 }

@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface LiabilityRepository extends JpaRepository<Liability, Long> {
     // FIXED: Changed parameter type from String to Long to match Student's updated ID field
-    List<Liability> findByStudentLrn(Long lrn);
+    List<Liability> findByStudentLrn(String studentLrn);
 }

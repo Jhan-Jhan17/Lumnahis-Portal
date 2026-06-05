@@ -5,13 +5,12 @@ import com.linhs.portal.repository.*;
 import com.linhs.portal.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,540 +23,1177 @@ public class PageController {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final BorrowRecordRepository borrowRecordRepository;
-    private final SportsEquipmentRecordRepository sportsEquipmentRecordRepository;
+    private final SportsEquipmentRepository sportsEquipmentRepository;
     private final GuidanceRecordRepository guidanceRecordRepository;
     private final DocumentRequestRepository documentRequestRepository;
     private final ClinicLogRepository clinicLogRepository;
     private final FacilityLiabilityRepository facilityLiabilityRepository;
+    private final SubjectRepository subjectRepository;
+    private final StudentGradeRepository studentGradeRepository;
+    private final ResourceHubRepository resourceHubRepository;
+    private final GalleryRepository galleryRepository;
+    private final AnnouncementRepository announcementRepository;
+    private final LibraryBorrowRecordRepository libraryBorrowRecordRepository;
 
-    public PageController(AuthService authService, 
-                          UserRepository userRepository, 
-                          StudentRepository studentRepository,
-                          BorrowRecordRepository borrowRecordRepository,
-                          SportsEquipmentRecordRepository sportsEquipmentRecordRepository,
-                          GuidanceRecordRepository guidanceRecordRepository,
-                          DocumentRequestRepository documentRequestRepository,
-                          ClinicLogRepository clinicLogRepository,
-                          FacilityLiabilityRepository facilityLiabilityRepository) {
+    public PageController(AuthService authService,
+            UserRepository userRepository,
+            StudentRepository studentRepository,
+            BorrowRecordRepository borrowRecordRepository,
+            SportsEquipmentRepository sportsEquipmentRepository,
+            GuidanceRecordRepository guidanceRecordRepository,
+            DocumentRequestRepository documentRequestRepository,
+            ClinicLogRepository clinicLogRepository,
+            FacilityLiabilityRepository facilityLiabilityRepository,
+            SubjectRepository subjectRepository,
+            StudentGradeRepository studentGradeRepository,
+            ResourceHubRepository resourceHubRepository,
+            GalleryRepository galleryRepository,
+            AnnouncementRepository announcementRepository,
+            LibraryBorrowRecordRepository libraryBorrowRecordRepository) {
         this.authService = authService;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.borrowRecordRepository = borrowRecordRepository;
-        this.sportsEquipmentRecordRepository = sportsEquipmentRecordRepository;
+        this.sportsEquipmentRepository = sportsEquipmentRepository;
         this.guidanceRecordRepository = guidanceRecordRepository;
         this.documentRequestRepository = documentRequestRepository;
         this.clinicLogRepository = clinicLogRepository;
         this.facilityLiabilityRepository = facilityLiabilityRepository;
+        this.subjectRepository = subjectRepository;
+        this.studentGradeRepository = studentGradeRepository;
+        this.resourceHubRepository = resourceHubRepository;
+        this.galleryRepository = galleryRepository;
+        this.announcementRepository = announcementRepository;
+        this.libraryBorrowRecordRepository = libraryBorrowRecordRepository;
     }
 
-    // --- PUBLIC PORTAL ROUTES ---
-    @GetMapping("/") public String homePage() { return "index"; }
-    @GetMapping("/about") public String aboutPage() { return "about"; }
-    @GetMapping("/announcements") public String announcementsPage() { return "announcements"; }
-    @GetMapping("/resources") public String resourcesPage() { return "resources"; }
-    @GetMapping("/gallery") public String galleryPage() { return "gallery"; }
-    @GetMapping("/clearance") public String clearancePage() { return "clearance-status"; }
-
-    @GetMapping("/requests")
-    public String requestsPage() {
-        return "requests"; 
+    @GetMapping("/")
+    public String showLandingPage(Model model) {
+        model.addAttribute("announcements", announcementRepository.findAll());
+        model.addAttribute("galleryItems", galleryRepository.findAll());
+        return "landing";
     }
 
-    // --- UNIFIED SEARCH & LOOKUP MANAGEMENT SYSTEM ---
-
-    @PostMapping("/search-clearance")
-    public String searchClearance(@RequestParam("lrn") Long lrn, Model model) {
-        return executeStudentLookup(lrn, model);
-    }
-
-    @GetMapping("/clearance/lookup")
-    public String checkClearance(@RequestParam(value = "lrn", required = false) Long lrn, Model model) {
-        if (lrn == null) {
-            return "redirect:/clearance";
-        }
-        return executeStudentLookup(lrn, model);
-    }
-
-    /**
-     * Helper method to centralize validation logic, catch runtime errors, 
-     * and apply default "PENDING" strings to null clearance fields to prevent 500 errors.
-     */
-    private String executeStudentLookup(Long lrn, Model model) {
-        try {
-            Optional<Student> studentOpt = studentRepository.findById(lrn);
-            if (studentOpt.isPresent()) {
-                Student student = studentOpt.get();
-                
-                // CRITICAL SAFETY BALANCING: If any profile values are completely blank (null) in the DB ledger, 
-                // replace them with "PENDING" so Thymeleaf string manipulation methods do not throw NullPointerExceptions.
-                if (student.getAdviserClearance() == null) student.setAdviserClearance("PENDING");
-                if (student.getLabClearance() == null) student.setLabClearance("PENDING");
-                if (student.getSportsClearance() == null) student.setSportsClearance("PENDING");
-                if (student.getGuidanceClearance() == null) student.setGuidanceClearance("PENDING");
-                
-                model.addAttribute("student", student);
-            } else {
-                model.addAttribute("errorMessage", "No student record found for LRN: " + lrn);
-            }
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "An unexpected tracking system anomaly occurred: " + e.getMessage());
-        }
-        // Both mapping routes now render safely to clearance-status view
-        return "clearance-status";
-    }
-
-    // Public Endpoint Mocking Landing Page Document Request Action Submission
-    @PostMapping("/public/request-document")
-    public String publicRequestDocument(@RequestParam("lrn") Long lrn, @RequestParam("documentType") String documentType) {
-        Optional<Student> studentOpt = studentRepository.findById(lrn);
-        String name = studentOpt.isPresent() ? studentOpt.get().getName() : "Unknown Public Applicant";
-        DocumentRequest req = new DocumentRequest(lrn, name, documentType, LocalDateTime.now(), false);
-        documentRequestRepository.save(req);
-        return "redirect:/clearance?success=document_requested";
-    }
-
-    // --- PORTAL SECURITY SIGNIN CONTROLS ---
     @GetMapping("/login")
-    public String catchStandardLogin(HttpSession session) {
-        if (session.getAttribute("roleName") != null) {
-            return "redirect:/dashboard-router";
-        }
-        return "redirect:/teacher-portal";
-    }
-
-    @GetMapping("/teacher-portal")
-    public String loginPage(HttpSession session, 
-                            @RequestParam(value = "error", required = false) String error,
-                            @RequestParam(value = "logout", required = false) String logout,
-                            Model model) {
-        if (error != null) {
-            session.removeAttribute("roleName");
-            session.removeAttribute("userName");
-            session.removeAttribute("assignedSection");
-            model.addAttribute("errorMessage", "Invalid email or password.");
-            return "login";
-        }
-        if (logout != null) {
-            model.addAttribute("logoutMessage", "You have been logged out successfully.");
-            return "login";
-        }
-        if (session.getAttribute("roleName") != null) {
-            return "redirect:/dashboard-router";
-        }
+    public String showLoginPage() {
         return "login";
     }
 
-    @PostMapping({"/teacher-portal", "/login"})
-    public String processLogin(@RequestParam String email, @RequestParam String password, HttpSession session) {
-        try {
-            User user = authService.authenticate(email, password);
-            if (user != null) {
-                session.setAttribute("userName", user.getName());
-                session.setAttribute("userEmail", user.getEmail());
-                String section = "None";
-                try {
-                    section = user.getAssignedSection() != null ? user.getAssignedSection() : "None";
-                } catch (Exception e) {}
-                session.setAttribute("assignedSection", section);
-                session.setAttribute("roleName", String.valueOf(user.getRole()).toUpperCase().trim());
-                return "redirect:/dashboard-router";
+    @PostMapping("/login")
+    public String handleLogin(@RequestParam("username") String username,
+            @RequestParam("password") String password,
+            HttpSession session,
+            Model model) {
+        Optional<User> userOpt = authService.authenticate(username, password);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            session.setAttribute("user", user);
+
+            String role = user.getRoleName() != null ? user.getRoleName().toUpperCase() : "";
+            switch (role) {
+                case "ADMIN_PRINCIPAL":
+                    return "redirect:/admin-dashboard";
+                case "ADVISER":
+                    return "redirect:/adviser-dashboard";
+                case "REGISTRAR":
+                    return "redirect:/registrar-dashboard";
+                case "FACILITIES_ADMIN":
+                    return "redirect:/custodian-dashboard";
+                case "SPORTS_ADMIN":
+                    return "redirect:/sports-dashboard";
+                case "GUIDANCE_COUNSELOR":
+                    return "redirect:/guidance-dashboard";
+                case "NURSE":
+                    return "redirect:/clinic-dashboard";
+                case "LIBRARIAN":
+                    return "redirect:/library-dashboard";
+                default:
+                    model.addAttribute("error", "Role mapping context unresolved.");
+                    return "login";
             }
-            return "redirect:/teacher-portal?error=invalid";
-        } catch (Exception ex) {
-            return "redirect:/teacher-portal?error=database_mismatch";
-        }
-    }
-
-    @GetMapping("/dashboard-router")
-    public String router(HttpSession session) {
-        String role = (String) session.getAttribute("roleName");
-        if (role == null) return "redirect:/teacher-portal";
-
-        switch (role) {
-            case "ADMIN_PRINCIPAL": return "redirect:/principal-dashboard";
-            case "ADVISER": return "redirect:/adviser-dashboard";
-            case "SPORTS_ADMIN": return "redirect:/sports-dashboard";
-            case "LAB_ADMIN": return "redirect:/lab-dashboard";
-            case "REGISTRAR": return "redirect:/registrar-dashboard";
-            case "GUIDANCE_COUNSELOR": return "redirect:/guidance-dashboard";
-            case "NURSE": return "redirect:/nurse-dashboard";
-            case "FACILITIES_ADMIN": return "redirect:/facilities-dashboard";
-            default: 
-                session.invalidate();
-                return "redirect:/teacher-portal?error=role_mismatch";
+        } else {
+            model.addAttribute("error", "Invalid institutional username or password credential profile.");
+            return "login";
         }
     }
 
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        if (session != null) session.invalidate();
-        return "redirect:/teacher-portal?logout=true";
+    public String handleLogout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
     }
 
-    // --- SECURED GUIDANCE COUNSELOR DASHBOARD SUBSYSTEM ---
-    @GetMapping("/guidance-dashboard")
-    public String guidanceDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "GUIDANCE_COUNSELOR")) return "redirect:/teacher-portal?error=unauthorized";
-        populateModel(session, model);
-
-        List<GuidanceRecord> activeCases = guidanceRecordRepository.findByIsResolvedFalse();
-        model.addAttribute("activeCases", activeCases);
-        model.addAttribute("activeCasesCount", activeCases.size());
-
-        List<Student> allStudents = studentRepository.findAll();
-        model.addAttribute("pendingCount", allStudents.stream().filter(s -> "PENDING".equalsIgnoreCase(s.getGuidanceClearance())).count());
-        model.addAttribute("clearedCount", allStudents.stream().filter(s -> "CLEARED".equalsIgnoreCase(s.getGuidanceClearance())).count());
-        model.addAttribute("totalCount", allStudents.size());
-        model.addAttribute("students", allStudents);
-
-        return "guidance-dashboard";
+    @GetMapping("/clearance-tracker")
+    public String showClearanceTrackerPage() {
+        return "clearance-status";
     }
 
-    @PostMapping("/guidance/log-case")
-    public String logGuidanceCase(@RequestParam("studentLrn") Long studentLrn,
-                                  @RequestParam("infractionType") String infractionType,
-                                  @RequestParam("details") String details,
-                                  HttpSession session) {
-        if (!isAuthorized(session, "GUIDANCE_COUNSELOR")) return "redirect:/teacher-portal?error=unauthorized";
-
-        Optional<Student> targetedStudent = studentRepository.findById(studentLrn);
-        String calculatedName = targetedStudent.isPresent() ? targetedStudent.get().getName() : "Unknown Student";
-
-        GuidanceRecord record = new GuidanceRecord(studentLrn, calculatedName, infractionType, details, LocalDateTime.now(), false);
-        guidanceRecordRepository.save(record);
-
-        if (targetedStudent.isPresent()) {
-            Student student = targetedStudent.get();
-            student.setGuidanceClearance("PENDING");
-            studentRepository.save(student);
-        }
-
-        return "redirect:/guidance-dashboard?success=case_logged";
-    }
-
-    @PostMapping("/guidance/resolve-case")
-    public String resolveGuidanceCase(@RequestParam("recordId") Long recordId, HttpSession session) {
-        if (!isAuthorized(session, "GUIDANCE_COUNSELOR")) return "redirect:/teacher-portal?error=unauthorized";
-
-        Optional<GuidanceRecord> recordOpt = guidanceRecordRepository.findById(recordId);
-        if (recordOpt.isPresent()) {
-            GuidanceRecord record = recordOpt.get();
-            record.setIsResolved(true);
-            guidanceRecordRepository.save(record);
-
-            List<GuidanceRecord> remainingCases = guidanceRecordRepository.findByStudentLrnAndIsResolvedFalse(record.getStudentLrn());
-            if (remainingCases.isEmpty()) {
-                Optional<Student> studentOpt = studentRepository.findById(record.getStudentLrn());
-                if (studentOpt.isPresent()) {
-                    Student student = studentOpt.get();
-                    student.setGuidanceClearance("CLEARED");
-                    studentRepository.save(student);
-                }
-            }
-        }
-        return "redirect:/guidance-dashboard?success=case_resolved";
-    }
-
-    // --- SECURED SPORTS ADMIN DASHBOARD SUBSYSTEM ---
-    @GetMapping("/sports-dashboard")
-    public String sportsDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "SPORTS_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        populateModel(session, model);
-
-        List<SportsEquipmentRecord> activeBorrows = sportsEquipmentRecordRepository.findByStatus("BORROWED");
-        model.addAttribute("activeBorrows", activeBorrows);
-        model.addAttribute("activeBorrowsCount", activeBorrows.size());
-
-        List<Student> allStudents = studentRepository.findAll();
-        model.addAttribute("pendingCount", allStudents.stream().filter(s -> "PENDING".equalsIgnoreCase(s.getSportsClearance())).count());
-        model.addAttribute("clearedCount", allStudents.stream().filter(s -> "CLEARED".equalsIgnoreCase(s.getSportsClearance())).count());
-        model.addAttribute("totalCount", allStudents.size());
-        model.addAttribute("students", allStudents);
-
-        return "sports-dashboard";
-    }
-
-    @PostMapping("/sports/borrow")
-    public String registerSportsBorrow(@RequestParam("lrn") Long lrn, @RequestParam("equipmentName") String equipmentName, HttpSession session) {
-        if (!isAuthorized(session, "SPORTS_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<Student> targetedStudent = studentRepository.findById(lrn);
-        String calculatedName = targetedStudent.isPresent() ? targetedStudent.get().getName() : "Unknown Student";
-        SportsEquipmentRecord record = new SportsEquipmentRecord(lrn, calculatedName, equipmentName, LocalDateTime.now(), "BORROWED");
-        sportsEquipmentRecordRepository.save(record);
-        if (targetedStudent.isPresent()) {
-            Student student = targetedStudent.get();
-            student.setSportsClearance("PENDING");
-            studentRepository.save(student);
-        }
-        return "redirect:/sports-dashboard?success=item_borrowed";
-    }
-
-    @PostMapping("/sports/return")
-    public String processSportsReturn(@RequestParam("recordId") Long recordId, HttpSession session) {
-        if (!isAuthorized(session, "SPORTS_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<SportsEquipmentRecord> recordOpt = sportsEquipmentRecordRepository.findById(recordId);
-        if (recordOpt.isPresent()) {
-            SportsEquipmentRecord record = recordOpt.get();
-            record.setStatus("RETURNED");
-            sportsEquipmentRecordRepository.save(record);
-            List<SportsEquipmentRecord> remainingLiabilities = sportsEquipmentRecordRepository.findByLrnAndStatus(record.getLrn(), "BORROWED");
-            if (remainingLiabilities.isEmpty()) {
-                Optional<Student> studentOpt = studentRepository.findById(record.getLrn());
-                if (studentOpt.isPresent()) {
-                    Student student = studentOpt.get();
-                    student.setSportsClearance("CLEARED");
-                    studentRepository.save(student);
-                }
-            }
-        }
-        return "redirect:/sports-dashboard?success=item_returned";
-    }
-
-    // --- SECURED LAB ADMIN DASHBOARD SUBSYSTEM ---
-    @GetMapping("/lab-dashboard")
-    public String labDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "LAB_ADMIN")) return "redirect:/teacher-portal?error=unauthorized"; 
-        populateModel(session, model);
-        List<BorrowRecord> activeBorrows = borrowRecordRepository.findByStatus("BORROWED");
-        model.addAttribute("activeBorrows", activeBorrows);
-        model.addAttribute("activeBorrowsCount", activeBorrows.size());
-        List<Student> allStudents = studentRepository.findAll();
-        model.addAttribute("pendingCount", allStudents.stream().filter(s -> "PENDING".equalsIgnoreCase(s.getLabClearance())).count());
-        model.addAttribute("clearedCount", allStudents.stream().filter(s -> "CLEARED".equalsIgnoreCase(s.getLabClearance())).count());
-        model.addAttribute("totalCount", allStudents.size());
-        model.addAttribute("students", allStudents);
-        return "lab-dashboard";
-    }
-
-    @PostMapping("/lab/borrow")
-    public String registerBorrowRecord(@RequestParam("lrn") Long lrn, 
-                                       @RequestParam("equipmentName") String equipmentName, 
-                                       HttpSession session,
-                                       RedirectAttributes redirectAttributes) {
-        if (!isAuthorized(session, "LAB_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<Student> targetedStudent = studentRepository.findById(lrn);
-        String calculatedName = targetedStudent.isPresent() ? targetedStudent.get().getName() : "Unknown Student";
-        BorrowRecord record = new BorrowRecord(lrn, calculatedName, equipmentName, LocalDateTime.now(), "BORROWED");
-        borrowRecordRepository.save(record);
-        if (targetedStudent.isPresent()) {
-            Student student = targetedStudent.get();
-            student.setLabClearance("PENDING");
-            studentRepository.save(student);
-        }
-        return "redirect:/lab-dashboard?success=item_borrowed";
-    }
-
-    @PostMapping("/lab/return")
-    public String processReturnTransaction(@RequestParam("recordId") Long recordId, HttpSession session) {
-        if (!isAuthorized(session, "LAB_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<BorrowRecord> recordOpt = borrowRecordRepository.findById(recordId);
-        if (recordOpt.isPresent()) {
-            BorrowRecord record = recordOpt.get();
-            record.setStatus("RETURNED"); 
-            borrowRecordRepository.save(record);
-            List<BorrowRecord> remainingLiabilities = borrowRecordRepository.findByLrnAndStatus(record.getLrn(), "BORROWED");
-            if (remainingLiabilities.isEmpty()) {
-                Optional<Student> studentOpt = studentRepository.findById(record.getLrn());
-                if (studentOpt.isPresent()) {
-                    Student student = studentOpt.get();
-                    student.setLabClearance("CLEARED"); 
-                    studentRepository.save(student);
-                }
-            }
-        }
-        return "redirect:/lab-dashboard?success=item_returned";
-    }
-
-    @PostMapping("/lab/update-clearance")
-    public String updateLabClearance(@RequestParam("lrn") Long lrn, @RequestParam("status") String status, HttpSession session) {
-        if (!isAuthorized(session, "LAB_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<Student> studentOpt = studentRepository.findById(lrn);
+    @GetMapping("/clearance/track")
+    public String trackClearanceStatus(@RequestParam("lrn") String lrn, Model model) {
+        Optional<Student> studentOpt = studentRepository.findByLrn(lrn);
         if (studentOpt.isPresent()) {
-            Student student = studentOpt.get();
-            student.setLabClearance(status.toUpperCase().trim());
-            studentRepository.save(student);
+            model.addAttribute("student", studentOpt.get());
+        } else {
+            model.addAttribute("error", "No mapping found matching LRN context parameter records.");
         }
-        return "redirect:/lab-dashboard?success=clearance_updated";
+        return "clearance-status";
     }
 
-    // --- SECURED REGISTRAR DASHBOARD SUBSYSTEM ---
-    @GetMapping("/registrar-dashboard")
-    public String registrarDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "REGISTRAR")) return "redirect:/teacher-portal?error=unauthorized";
-        populateModel(session, model);
-        
-        List<DocumentRequest> incomingRequests = documentRequestRepository.findByIsCompletedFalse();
-        model.addAttribute("incomingRequests", incomingRequests);
-        model.addAttribute("incomingRequestsCount", incomingRequests.size());
-        
-        List<Student> allStudents = studentRepository.findAll();
-        model.addAttribute("students", allStudents);
-        model.addAttribute("totalCount", allStudents.size());
-        return "registrar-dashboard";
+    @GetMapping("/admin-dashboard")
+    public String showAdminDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"ADMIN_PRINCIPAL".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("advisers", userRepository.findByRoleName("ADVISER"));
+        model.addAttribute("allStudents", studentRepository.findAll());
+        return "admin-dashboard";
     }
 
-    @PostMapping("/registrar/complete-request")
-    public String completeDocumentRequest(@RequestParam("requestId") Long requestId, HttpSession session) {
-        if (!isAuthorized(session, "REGISTRAR")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<DocumentRequest> reqOpt = documentRequestRepository.findById(requestId);
-        if (reqOpt.isPresent()) {
-            DocumentRequest req = reqOpt.get();
-            req.setIsCompleted(true);
-            documentRequestRepository.save(req);
-        }
-        return "redirect:/registrar-dashboard?success=request_completed";
-    }
-
-    // --- SECURED NURSE DASHBOARD SUBSYSTEM ---
-    @GetMapping("/nurse-dashboard")
-    public String nurseDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "NURSE")) return "redirect:/teacher-portal?error=unauthorized";
-        populateModel(session, model);
-        
-        List<ClinicLog> logs = clinicLogRepository.findAll();
-        model.addAttribute("clinicLogs", logs);
-        model.addAttribute("clinicLogsCount", logs.size());
-        
-        List<Student> allStudents = studentRepository.findAll();
-        model.addAttribute("students", allStudents);
-        return "nurse-dashboard";
-    }
-
-    @PostMapping("/nurse/log-visit")
-    public String logClinicVisit(@RequestParam("studentLrn") Long studentLrn, @RequestParam("reason") String reason, HttpSession session) {
-        if (!isAuthorized(session, "NURSE")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<Student> studentOpt = studentRepository.findById(studentLrn);
-        String name = studentOpt.isPresent() ? studentOpt.get().getName() : "Unknown Patient";
-        
-        ClinicLog log = new ClinicLog(studentLrn, name, reason, LocalDateTime.now());
-        clinicLogRepository.save(log);
-        return "redirect:/nurse-dashboard?success=visit_logged";
-    }
-
-    // --- SECURED FACILITIES ADMIN DASHBOARD SUBSYSTEM ---
-    @GetMapping("/facilities-dashboard")
-    public String facilitiesDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "FACILITIES_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        populateModel(session, model);
-        
-        List<Student> allStudents = studentRepository.findAll();
-        Map<String, List<Student>> studentsBySection = allStudents.stream()
-                .filter(s -> s.getSection() != null)
-                .collect(Collectors.groupingBy(Student::getSection));
-        
-        List<FacilityLiability> activeLiabilities = facilityLiabilityRepository.findByIsResolvedFalse();
-        
-        model.addAttribute("studentsBySection", studentsBySection);
-        model.addAttribute("activeLiabilities", activeLiabilities);
-        model.addAttribute("activeLiabilitiesCount", activeLiabilities.size());
-        return "facilities-dashboard";
-    }
-
-    @PostMapping("/facilities/log-liability")
-    public String logFacilityLiability(@RequestParam("studentLrn") Long studentLrn, @RequestParam("itemDescription") String itemDescription, HttpSession session) {
-        if (!isAuthorized(session, "FACILITIES_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<Student> studentOpt = studentRepository.findById(studentLrn);
-        if (studentOpt.isPresent()) {
-            Student student = studentOpt.get();
-            FacilityLiability liability = new FacilityLiability(studentLrn, student.getName(), student.getSection(), itemDescription, LocalDateTime.now(), false);
-            facilityLiabilityRepository.save(liability);
-            
-            student.setLabClearance("PENDING");
-            studentRepository.save(student);
-        }
-        return "redirect:/facilities-dashboard?success=liability_logged";
-    }
-
-    @PostMapping("/facilities/resolve-liability")
-    public String resolveFacilityLiability(@RequestParam("liabilityId") Long liabilityId, HttpSession session) {
-        if (!isAuthorized(session, "FACILITIES_ADMIN")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<FacilityLiability> liabilityOpt = facilityLiabilityRepository.findById(liabilityId);
-        if (liabilityOpt.isPresent()) {
-            FacilityLiability liability = liabilityOpt.get();
-            liability.setIsResolved(true);
-            facilityLiabilityRepository.save(liability);
-            
-            List<FacilityLiability> remaining = facilityLiabilityRepository.findByStudentLrnAndIsResolvedFalse(liability.getStudentLrn());
-            if (remaining.isEmpty()) {
-                Optional<Student> studentOpt = studentRepository.findById(liability.getStudentLrn());
-                if (studentOpt.isPresent()) {
-                    Student student = studentOpt.get();
-                    student.setLabClearance("CLEARED");
-                    studentRepository.save(student);
-                }
-            }
-        }
-        return "redirect:/facilities-dashboard?success=liability_resolved";
-    }
-
-    // --- OTHER DASHBOARDS (Adviser, Principal) ---
     @GetMapping("/adviser-dashboard")
-    public String adviserDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "ADVISER")) return "redirect:/teacher-portal?error=unauthorized";
-        populateModel(session, model);
-        String assignedSection = (String) session.getAttribute("assignedSection");
-        List<Student> classroomStudents = studentRepository.findAll().stream()
-                .filter(student -> student.getSection() != null && student.getSection().equalsIgnoreCase(assignedSection))
-                .collect(Collectors.toList());
-        model.addAttribute("classroomStudents", classroomStudents);
-        model.addAttribute("classCount", classroomStudents.size());
+    public String showAdviserDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"ADVISER".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("adviserSection",
+                user.getAssignedSection() != null ? user.getAssignedSection() : "Not Assigned");
+
+        if (user.getAssignedSection() != null) {
+            List<Student> sectionStudents = studentRepository.findBySection(user.getAssignedSection());
+            model.addAttribute("students", sectionStudents);
+        } else {
+            model.addAttribute("students", new ArrayList<Student>());
+        }
         return "adviser-dashboard";
     }
 
-    @PostMapping("/adviser/add-student")
-    public String adviserAddStudent(@RequestParam("lrn") Long lrn, @RequestParam("name") String name, HttpSession session) {
-        if (!isAuthorized(session, "ADVISER")) return "redirect:/teacher-portal?error=unauthorized";
-        Student student = new Student();
-        student.setLrn(lrn);
-        student.setName(name.trim());
-        student.setSection((String) session.getAttribute("assignedSection"));
-        student.setAdviserClearance("PENDING");
-        student.setLabClearance("PENDING");
-        student.setSportsClearance("PENDING");
-        student.setGuidanceClearance("PENDING");
-        studentRepository.save(student);
-        return "redirect:/adviser-dashboard?success=student_added";
+    @GetMapping("/request-document")
+    public String showRequestDocumentForm(Model model) {
+        return "request-doc";
     }
 
-    @PostMapping("/adviser/update-clearance")
-    public String updateStudentClearance(@RequestParam("lrn") Long lrn, @RequestParam("status") String status, HttpSession session) {
-        if (!isAuthorized(session, "ADVISER")) return "redirect:/teacher-portal?error=unauthorized";
-        Optional<Student> studentOpt = studentRepository.findById(lrn);
-        if (studentOpt.isPresent()) {
-            Student student = studentOpt.get();
-            student.setAdviserClearance(status);
-            studentRepository.save(student);
+    @PostMapping("/request-document/submit")
+    public String handleDocumentRequestSubmission(
+            @RequestParam("firstName") String firstName,
+            @RequestParam("lastName") String lastName,
+            @RequestParam("contactNumber") String contactNumber,
+            @RequestParam("academicYear") String academicYear,
+            @RequestParam("gradeSection") String gradeSection,
+            @RequestParam("documentType") String documentType,
+            @RequestParam("purpose") String purpose,
+            Model model) {
+
+        try {
+            DocumentRequest newRequest = new DocumentRequest();
+            newRequest.setFirstName(firstName);
+            newRequest.setLastName(lastName);
+            newRequest.setContactNumber(contactNumber);
+            newRequest.setAcademicYear(academicYear);
+            newRequest.setGradeSection(gradeSection);
+            newRequest.setDocumentType(documentType);
+            newRequest.setPurpose(purpose);
+            newRequest.setStatus("PENDING");
+            newRequest.setRequestedAt(LocalDateTime.now());
+
+            documentRequestRepository.save(newRequest);
+
+            return "redirect:/registrar-dashboard";
+
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "System error processing transaction parameters: " + e.getMessage());
+            return "request-doc";
         }
-        return "redirect:/adviser-dashboard?success=clearance_updated";
     }
 
-    @GetMapping("/principal-dashboard")
-    public String principalDashboard(HttpSession session, Model model) {
-        if (!isAuthorized(session, "ADMIN_PRINCIPAL")) return "redirect:/teacher-portal?error=unauthorized";
-        populateModel(session, model);
-        model.addAttribute("facultyList", userRepository.findAll());
-        return "principal-dashboard";
+    @GetMapping("/registrar-dashboard")
+    public String showRegistrarDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"REGISTRAR".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("requests", documentRequestRepository.findAll());
+        return "registrar-dashboard";
     }
 
-    @PostMapping("/principal/edit-faculty")
-    public String editFacultyAccount(@RequestParam("id") @NonNull Long id, @RequestParam("name") String name, @RequestParam("email") String email, @RequestParam("assignedSection") String assignedSection, HttpSession session) {
-        if (!isAuthorized(session, "ADMIN_PRINCIPAL")) return "redirect:/teacher-portal?error=unauthorized";
-        User user = userRepository.findById(id).orElseThrow();
-        user.setName(name);
-        user.setEmail(email);
-        user.setAssignedSection(assignedSection.trim().isEmpty() ? "Not Assigned" : assignedSection);
-        userRepository.save(user);
-        return "redirect:/principal-dashboard";
+    @GetMapping("/custodian-dashboard")
+    public String showCustodianDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"FACILITIES_ADMIN".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("borrowRecords", borrowRecordRepository.findAll());
+        model.addAttribute("liabilities", facilityLiabilityRepository.findAll());
+        return "custodian-dashboard";
     }
 
-    private boolean isAuthorized(HttpSession session, String requiredRole) {
-        String role = (String) session.getAttribute("roleName");
-        return role != null && role.equals(requiredRole);
+    @GetMapping("/sports-dashboard")
+    public String showSportsDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"SPORTS_ADMIN".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("equipments", sportsEquipmentRepository.findAll());
+        return "sports-dashboard";
     }
 
-    private void populateModel(HttpSession session, Model model) {
-        model.addAttribute("userName", session.getAttribute("userName"));
-        model.addAttribute("userEmail", session.getAttribute("userEmail"));
-        model.addAttribute("roleName", session.getAttribute("roleName"));
+    @GetMapping("/guidance-dashboard")
+    public String showGuidanceDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"GUIDANCE_COUNSELOR".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("records", guidanceRecordRepository.findAll());
+        return "guidance-dashboard";
+    }
+
+    @GetMapping("/clinic-dashboard")
+    public String showClinicDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"NURSE".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("logs", clinicLogRepository.findAll());
+        return "clinic-dashboard";
+    }
+
+    @GetMapping("/library-dashboard")
+    public String showLibraryDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"LIBRARIAN".equalsIgnoreCase(user.getRoleName()))
+            return "redirect:/login";
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("libraryRecords", libraryBorrowRecordRepository.findAll());
+        return "library-dashboard";
+    }
+
+    @GetMapping("/student-liabilities-details")
+    public String showStudentLiabilitiesDetails(@RequestParam("lrn") String lrn, Model model) {
+        Optional<Student> studentOpt = studentRepository.findByLrn(lrn);
+        if (studentOpt.isEmpty()) {
+            model.addAttribute("error", "Student record tracking context missing.");
+            return "error";
+        }
+
+        Student student = studentOpt.get();
+        LiabilityDetailsRow details = new LiabilityDetailsRow(student.getName(), student.getLrn(), "ACTIVE");
+
+        List<BorrowRecord> propertyRecords = borrowRecordRepository.findByStudentLrnAndStatus(lrn, "BORROWED");
+        for (BorrowRecord br : propertyRecords) {
+            details.addOpenItem(
+                    new OpenLiabilityItem("Property Custodian", br.getItemName(), br.getBorrowedAt(), "UNRETURNED"));
+        }
+
+        List<SportsEquipment> sportsRecords = sportsEquipmentRepository.findByStudentLrnAndStatus(lrn, "BORROWED");
+        for (SportsEquipment se : sportsRecords) {
+            details.addOpenItem(new OpenLiabilityItem("Sports & Athletics",
+                    se.getEquipmentName() + " (Qty: " + se.getQuantity() + ")", se.getBorrowDate(), "UNRETURNED"));
+        }
+
+        List<GuidanceRecord> guidanceRecords = guidanceRecordRepository.findByStudentLrnAndStatus(lrn, "PENDING");
+        for (GuidanceRecord gr : guidanceRecords) {
+            details.addOpenItem(new OpenLiabilityItem("Guidance Office", gr.getInfractionDescription(), gr.getLogDate(),
+                    "PENDING_RESOLUTION"));
+        }
+
+        List<LibraryBorrowRecord> libraryRecords = libraryBorrowRecordRepository.findByStudentLrnAndStatus(lrn,
+                "BORROWED");
+        for (LibraryBorrowRecord lbr : libraryRecords) {
+            details.addOpenItem(new OpenLiabilityItem("School Library", "Book: " + lbr.getBookTitle(),
+                    lbr.getBorrowDate(), "OVERDUE_RETAINED"));
+        }
+
+        List<FacilityLiability> physicalRecords = facilityLiabilityRepository.findByStudentLrnAndStatus(lrn,
+                "UNRESOLVED");
+        for (FacilityLiability fl : physicalRecords) {
+            details.addOpenItem(new OpenLiabilityItem("Facilities Damage",
+                    fl.getFacilityName() + " - " + fl.getDamageDescription(), fl.getReportedDate(), "DAMAGE_UNPAID"));
+        }
+
+        model.addAttribute("details", details);
+        return "student-liabilities-details";
+    }
+
+    public static class LiabilityDetailsRow {
+        private final String studentName;
+        private final String lrn;
+        private final String status;
+        private final List<OpenLiabilityItem> openItems = new ArrayList<>();
+
+        public LiabilityDetailsRow(String studentName, String lrn, String status) {
+            this.studentName = studentName;
+            this.lrn = lrn;
+            this.status = status;
+        }
+
+        public String getStudentName() {
+            return studentName;
+        }
+
+        public String getLrn() {
+            return lrn;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public List<OpenLiabilityItem> getOpenItems() {
+            return openItems;
+        }
+
+        public void addOpenItem(OpenLiabilityItem item) {
+            if (item != null)
+                openItems.add(item);
+        }
+    }
+
+    public static class OpenLiabilityItem {
+        private final String category;
+        private final String description;
+        private final LocalDateTime loggedAt;
+        private final String state;
+
+        public OpenLiabilityItem(String category, String description, LocalDateTime loggedAt, String state) {
+            this.category = category;
+            this.description = description;
+            this.loggedAt = loggedAt;
+            this.state = state;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public LocalDateTime getLoggedAt() {
+            return loggedAt;
+        }
+
+        public String getState() {
+            return state;
+        }
+    }
+
+    // =========================================================================
+    // INLINE ENTITY MODELS & DATA LAYERS (PRESERVED UNTOUCHED)
+    // =========================================================================
+
+    public static class User {
+        private String username;
+        private String password;
+        private String role;
+        private String assignedSection;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
+
+        public String getAssignedSection() {
+            return assignedSection;
+        }
+
+        public void setAssignedSection(String assignedSection) {
+            this.assignedSection = assignedSection;
+        }
+
+        // Added bridge methods to support external entity model signatures cleanly
+        public String getRoleName() {
+            return this.role;
+        }
+
+        public void setRoleName(String roleName) {
+            this.role = roleName;
+        }
+    }
+
+    public static class Student {
+        private String name;
+        private String lrn;
+        private String section;
+        private String status;
+        private String adviserClearance;
+        private String labClearance;
+        private String sportsClearance;
+        private String guidanceClearance;
+        private String facilitiesClearance;
+        private String libraryClearance;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getLrn() {
+            return lrn;
+        }
+
+        public void setLrn(String lrn) {
+            this.lrn = lrn;
+        }
+
+        public String getSection() {
+            return section;
+        }
+
+        public void setSection(String section) {
+            this.section = section;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        public String getAdviserClearance() {
+            return adviserClearance;
+        }
+
+        public void setAdviserClearance(String adviserClearance) {
+            this.adviserClearance = adviserClearance;
+        }
+
+        public String getLabClearance() {
+            return labClearance;
+        }
+
+        public void setLabClearance(String labClearance) {
+            this.labClearance = labClearance;
+        }
+
+        public String getSportsClearance() {
+            return sportsClearance;
+        }
+
+        public void setSportsClearance(String sportsClearance) {
+            this.sportsClearance = sportsClearance;
+        }
+
+        public String getGuidanceClearance() {
+            return guidanceClearance;
+        }
+
+        public void setGuidanceClearance(String guidanceClearance) {
+            this.guidanceClearance = guidanceClearance;
+        }
+
+        public String getFacilitiesClearance() {
+            return facilitiesClearance;
+        }
+
+        public void setFacilitiesClearance(String facilitiesClearance) {
+            this.facilitiesClearance = facilitiesClearance;
+        }
+
+        public String getLibraryClearance() {
+            return libraryClearance;
+        }
+
+        public void setLibraryClearance(String libraryClearance) {
+            this.libraryClearance = libraryClearance;
+        }
+    }
+
+    public static class BorrowRecord {
+        private Long id;
+        private String studentLrn;
+        private String equipmentName;
+        private Integer quantity;
+        private LocalDateTime borrowDate;
+        private String status;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentLrn() {
+            return studentLrn;
+        }
+
+        public void setStudentLrn(String studentLrn) {
+            this.studentLrn = studentLrn;
+        }
+
+        public String getEquipmentName() {
+            return equipmentName;
+        }
+
+        public void setEquipmentName(String equipmentName) {
+            this.equipmentName = equipmentName;
+        }
+
+        public Integer getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(Integer quantity) {
+            this.quantity = quantity;
+        }
+
+        public LocalDateTime getBorrowDate() {
+            return borrowDate;
+        }
+
+        public void setBorrowDate(LocalDateTime borrowDate) {
+            this.borrowDate = borrowDate;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        // Added bridge methods to match standalone file parameters cleanly
+        public String getItemName() {
+            return this.equipmentName;
+        }
+
+        public LocalDateTime getBorrowedAt() {
+            return this.borrowDate;
+        }
+    }
+
+    public static class SportsEquipment {
+        private Long id;
+        private String studentLrn;
+        private String equipmentName;
+        private Integer quantity;
+        private LocalDateTime borrowDate;
+        private String status;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentLrn() {
+            return studentLrn;
+        }
+
+        public void setStudentLrn(String studentLrn) {
+            this.studentLrn = studentLrn;
+        }
+
+        public String getEquipmentName() {
+            return equipmentName;
+        }
+
+        public void setEquipmentName(String equipmentName) {
+            this.equipmentName = equipmentName;
+        }
+
+        public Integer getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(Integer quantity) {
+            this.quantity = quantity;
+        }
+
+        public LocalDateTime getBorrowDate() {
+            return borrowDate;
+        }
+
+        public void setBorrowDate(LocalDateTime borrowDate) {
+            this.borrowDate = borrowDate;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
+
+    public static class GuidanceRecord {
+        private Long id;
+        private String studentLrn;
+        private String infractionDescription;
+        private LocalDateTime logDate;
+        private String status;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentLrn() {
+            return studentLrn;
+        }
+
+        public void setStudentLrn(String studentLrn) {
+            this.studentLrn = studentLrn;
+        }
+
+        public String getInfractionDescription() {
+            return infractionDescription;
+        }
+
+        public void setInfractionDescription(String infractionDescription) {
+            this.infractionDescription = infractionDescription;
+        }
+
+        public LocalDateTime getLogDate() {
+            return logDate;
+        }
+
+        public void setLogDate(LocalDateTime logDate) {
+            this.logDate = logDate;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
+
+    public static class DocumentRequest {
+        private Long id;
+        private String firstName;
+        private String lastName;
+        private String contactNumber;
+        private String academicYear;
+        private String gradeSection;
+        private String documentType;
+        private String purpose;
+        private String status;
+        private LocalDateTime requestedAt;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
+        }
+
+        public String getContactNumber() {
+            return contactNumber;
+        }
+
+        public void setContactNumber(String contactNumber) {
+            this.contactNumber = contactNumber;
+        }
+
+        public String getAcademicYear() {
+            return academicYear;
+        }
+
+        public void setAcademicYear(String academicYear) {
+            this.academicYear = academicYear;
+        }
+
+        public String getGradeSection() {
+            return gradeSection;
+        }
+
+        public void setGradeSection(String gradeSection) {
+            this.gradeSection = gradeSection;
+        }
+
+        public String getDocumentType() {
+            return documentType;
+        }
+
+        public void setDocumentType(String documentType) {
+            this.documentType = documentType;
+        }
+
+        public String getPurpose() {
+            return purpose;
+        }
+
+        public void setPurpose(String purpose) {
+            this.purpose = purpose;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        public LocalDateTime getRequestedAt() {
+            return requestedAt;
+        }
+
+        public void setRequestedAt(LocalDateTime requestedAt) {
+            this.requestedAt = requestedAt;
+        }
+    }
+
+    public static class ClinicLog {
+        private Long id;
+        private String studentLrn;
+        private String symptoms;
+        private String treatment;
+        private LocalDateTime visitDate;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentLrn() {
+            return studentLrn;
+        }
+
+        public void setStudentLrn(String studentLrn) {
+            this.studentLrn = studentLrn;
+        }
+
+        public String getSymptoms() {
+            return symptoms;
+        }
+
+        public void setSymptoms(String symptoms) {
+            this.symptoms = symptoms;
+        }
+
+        public String getTreatment() {
+            return treatment;
+        }
+
+        public void setTreatment(String treatment) {
+            this.treatment = treatment;
+        }
+
+        public LocalDateTime getVisitDate() {
+            return visitDate;
+        }
+
+        public void setVisitDate(LocalDateTime visitDate) {
+            this.visitDate = visitDate;
+        }
+    }
+
+    public static class FacilityLiability {
+        private Long id;
+        private String studentLrn;
+        private String facilityName;
+        private String damageDescription;
+        private LocalDateTime reportedDate;
+        private String status;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentLrn() {
+            return studentLrn;
+        }
+
+        public void setStudentLrn(String studentLrn) {
+            this.studentLrn = studentLrn;
+        }
+
+        public String getFacilityName() {
+            return facilityName;
+        }
+
+        public void setFacilityName(String facilityName) {
+            this.facilityName = facilityName;
+        }
+
+        public String getDamageDescription() {
+            return damageDescription;
+        }
+
+        public void setDamageDescription(String damageDescription) {
+            this.damageDescription = damageDescription;
+        }
+
+        public LocalDateTime getReportedDate() {
+            return reportedDate;
+        }
+
+        public void setReportedDate(LocalDateTime reportedDate) {
+            this.reportedDate = reportedDate;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
+
+    public static class Subject {
+        private Long id;
+        private String code;
+        private String name;
+        private String gradeLevel;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getGradeLevel() {
+            return gradeLevel;
+        }
+
+        public void setGradeLevel(String gradeLevel) {
+            this.gradeLevel = gradeLevel;
+        }
+    }
+
+    public static class StudentGrade {
+        private Long id;
+        private String studentLrn;
+        private String subjectCode;
+        private Double quarter1;
+        private Double quarter2;
+        private Double quarter3;
+        private Double quarter4;
+        private Double finalGrade;
+        private String remarks;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentLrn() {
+            return studentLrn;
+        }
+
+        public void setStudentLrn(String studentLrn) {
+            this.studentLrn = studentLrn;
+        }
+
+        public String getSubjectCode() {
+            return subjectCode;
+        }
+
+        public void setSubjectCode(String subjectCode) {
+            this.subjectCode = subjectCode;
+        }
+
+        public Double getQuarter1() {
+            return quarter1;
+        }
+
+        public void setQuarter1(Double quarter1) {
+            this.quarter1 = quarter1;
+        }
+
+        public Double getQuarter2() {
+            return quarter2;
+        }
+
+        public void setQuarter2(Double quarter2) {
+            this.quarter2 = quarter2;
+        }
+
+        public Double getQuarter3() {
+            return quarter3;
+        }
+
+        public void setQuarter3(Double quarter3) {
+            this.quarter3 = quarter3;
+        }
+
+        public Double getQuarter4() {
+            return quarter4;
+        }
+
+        public void setQuarter4(Double quarter4) {
+            this.quarter4 = quarter4;
+        }
+
+        public Double getFinalGrade() {
+            return finalGrade;
+        }
+
+        public void setFinalGrade(Double finalGrade) {
+            this.finalGrade = finalGrade;
+        }
+
+        public String getRemarks() {
+            return remarks;
+        }
+
+        public void setRemarks(String remarks) {
+            this.remarks = remarks;
+        }
+    }
+
+    public static class ResourceHub {
+        private Long id;
+        private String title;
+        private String description;
+        private String fileUrl;
+        private String uploadedBy;
+        private LocalDateTime uploadedAt;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getFileUrl() {
+            return fileUrl;
+        }
+
+        public void setFileUrl(String fileUrl) {
+            this.fileUrl = fileUrl;
+        }
+
+        public String getUploadedBy() {
+            return uploadedBy;
+        }
+
+        public void setUploadedBy(String uploadedBy) {
+            this.uploadedBy = uploadedBy;
+        }
+
+        public LocalDateTime getUploadedAt() {
+            return uploadedAt;
+        }
+
+        public void setUploadedAt(LocalDateTime uploadedAt) {
+            this.uploadedAt = uploadedAt;
+        }
+    }
+
+    public static class Gallery {
+        private Long id;
+        private String imageUrl;
+        private String caption;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
+        public String getCaption() {
+            return caption;
+        }
+
+        public void setCaption(String caption) {
+            this.caption = caption;
+        }
+    }
+
+    public static class Announcement {
+        private Long id;
+        private String title;
+        private String content;
+        private LocalDateTime createdAt;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
+        }
+
+        public LocalDateTime getCreatedAt() {
+            return createdAt;
+        }
+
+        public void setCreatedAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+        }
+    }
+
+    public static class LibraryBorrowRecord {
+        private Long id;
+        private String studentLrn;
+        private String bookTitle;
+        private LocalDateTime borrowDate;
+        private String status;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentLrn() {
+            return studentLrn;
+        }
+
+        public void setStudentLrn(String studentLrn) {
+            this.studentLrn = studentLrn;
+        }
+
+        public String getBookTitle() {
+            return bookTitle;
+        }
+
+        public void setBookTitle(String bookTitle) {
+            this.bookTitle = bookTitle;
+        }
+
+        public LocalDateTime getBorrowDate() {
+            return borrowDate;
+        }
+
+        public void setBorrowDate(LocalDateTime borrowDate) {
+            this.borrowDate = borrowDate;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
     }
 }

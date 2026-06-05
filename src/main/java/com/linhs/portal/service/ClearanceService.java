@@ -21,21 +21,29 @@ public class ClearanceService {
         this.guidanceRecordRepository = guidanceRecordRepository;
     }
 
-    public List<String> calculateLiabilities(Long lrn) {
+    /**
+     * Aggregates active student financial, material, or behavioral liabilities.
+     * Maps across the unified student tracking schemas.
+     */
+    public List<String> calculateLiabilities(String lrn) {
         List<String> liabilitiesList = new ArrayList<>();
 
-        // 1. Check Science Lab Equipment Liabilities
-        List<BorrowRecord> unreturnedAssets = borrowRecordRepository.findByLrnAndStatus(lrn, "BORROWED");
+        // 1. Check General Asset & Lab Borrowing Liabilities
+        List<BorrowRecord> unreturnedAssets = borrowRecordRepository.findByStudentLrn(lrn);
         for (BorrowRecord record : unreturnedAssets) {
-            liabilitiesList.add(String.format("Unreturned item: '%s' from Science Laboratory (Borrowed: %s)", 
-                record.getEquipmentName(), record.getBorrowDate()));
+            if ("BORROWED".equalsIgnoreCase(record.getStatus())) {
+                liabilitiesList.add(String.format("Unreturned item: '%s' (Borrowed: %s)", 
+                    record.getItemName(), record.getBorrowedAt()));
+            }
         }
 
-        // 2. Check Guidance Behavior Violations
-        List<GuidanceRecord> activeInfractions = guidanceRecordRepository.findByStudentLrnAndIsResolvedFalse(lrn);
-        for (GuidanceRecord incident : activeInfractions) {
-            liabilitiesList.add(String.format("Unresolved case record inside Guidance Office: %s (Logged: %s)", 
-                incident.getInfractionType(), incident.getIncidentDate()));
+        // 2. Check Guidance Behavioral/Incident Cases
+        List<GuidanceRecord> infractions = guidanceRecordRepository.findByStudentLrn(lrn);
+        for (GuidanceRecord incident : infractions) {
+            if (incident.getActionTaken() == null || incident.getActionTaken().isBlank()) {
+                liabilitiesList.add(String.format("Unresolved case record inside Guidance Office: %s (Logged: %s)", 
+                    incident.getIncidentDetails(), incident.getCreatedAt()));
+            }
         }
 
         return liabilitiesList;

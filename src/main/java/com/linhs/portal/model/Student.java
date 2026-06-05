@@ -1,120 +1,126 @@
 package com.linhs.portal.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "students")
 public class Student {
 
     @Id
-    private Long lrn; // Main Primary Key (Long)
-    
-    @Column(nullable = false)
+    @Column(name = "lrn", nullable = false, unique = true)
+    private String lrn;
+
+    @Column(name = "name", nullable = false)
     private String name;
-    
+
+    @Column(name = "section")
     private String section;
-    
-    // --- CLEARANCE FIELDS FOR ALL DASHBOARDS ---
-    private String adviserClearance;
-    private String sportsClearance;
-    private String labClearance;
-    private String registrarClearance;
-    private String guidanceClearance;
-    private String nurseClearance;
-    private String facilitiesClearance;
 
-    // Default Constructor
-    public Student() {}
+    // --- Clearance Status Fields ---
+    @Column(name = "adviser_clearance")
+    private String adviserClearance = "PENDING";
 
-    // Parameterized Constructor
-    public Student(Long lrn, String name, String section) {
+    @Column(name = "lab_clearance")
+    private String labClearance = "PENDING";
+
+    @Column(name = "sports_clearance")
+    private String sportsClearance = "PENDING";
+
+    @Column(name = "guidance_clearance")
+    private String guidanceClearance = "PENDING";
+
+    @Column(name = "facilities_clearance")
+    private String facilitiesClearance = "PENDING";
+
+    @Column(name = "library_clearance")
+    private String libraryClearance = "PENDING";
+
+    // 1. Default constructor (Strictly required by Spring Data JPA)
+    public Student() {
+    }
+
+    // 2. Custom constructor (Required by PageController.java for the Edit Student
+    // feature)
+    public Student(String lrn, String name, String section) {
         this.lrn = lrn;
         this.name = name;
         this.section = section;
     }
 
-    // --- GETTERS AND SETTERS ---
-    
-    public Long getLrn() { 
-        return lrn; 
-    }
-    
-    public void setLrn(Long lrn) { 
-        this.lrn = lrn; 
+    // --- Standard Getters and Setters ---
+    public String getLrn() {
+        return lrn;
     }
 
-    public String getName() { 
-        return name; 
-    }
-    
-    public void setName(String name) { 
-        this.name = name; 
+    public void setLrn(String lrn) {
+        this.lrn = lrn;
     }
 
-    public String getSection() { 
-        return section; 
-    }
-    
-    public void setSection(String section) { 
-        this.section = section; 
+    public String getName() {
+        return name;
     }
 
-    public String getAdviserClearance() { 
-        return adviserClearance; 
-    }
-    
-    public void setAdviserClearance(String adviserClearance) { 
-        this.adviserClearance = adviserClearance; 
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getSportsClearance() { 
-        return sportsClearance; 
-    }
-    
-    public void setSportsClearance(String sportsClearance) { 
-        this.sportsClearance = sportsClearance; 
+    public String getSection() {
+        return section;
     }
 
-    public String getLabClearance() { 
-        return labClearance; 
-    }
-    
-    public void setLabClearance(String labClearance) { 
-        this.labClearance = labClearance; 
+    public void setSection(String section) {
+        this.section = section;
     }
 
-    public String getRegistrarClearance() { 
-        return registrarClearance; 
-    }
-    
-    public void setRegistrarClearance(String registrarClearance) { 
-        this.registrarClearance = registrarClearance; 
+    // --- Clearance Getters and Setters ---
+    public String getAdviserClearance() {
+        return adviserClearance;
     }
 
-    public String getGuidanceClearance() { 
-        return guidanceClearance; 
-    }
-    
-    public void setGuidanceClearance(String guidanceClearance) { 
-        this.guidanceClearance = guidanceClearance; 
+    public void setAdviserClearance(String adviserClearance) {
+        this.adviserClearance = adviserClearance;
     }
 
-    public String getNurseClearance() { 
-        return nurseClearance; 
-    }
-    
-    public void setNurseClearance(String nurseClearance) { 
-        this.nurseClearance = nurseClearance; 
+    public String getLabClearance() {
+        return labClearance;
     }
 
-    public String getFacilitiesClearance() { 
-        return facilitiesClearance; 
+    public void setLabClearance(String labClearance) {
+        this.labClearance = labClearance;
     }
-    
-    public void setFacilitiesClearance(String facilitiesClearance) { 
-        this.facilitiesClearance = facilitiesClearance; 
+
+    public String getSportsClearance() {
+        return sportsClearance;
+    }
+
+    public void setSportsClearance(String sportsClearance) {
+        this.sportsClearance = sportsClearance;
+    }
+
+    public String getGuidanceClearance() {
+        return guidanceClearance;
+    }
+
+    public void setGuidanceClearance(String guidanceClearance) {
+        this.guidanceClearance = guidanceClearance;
+    }
+
+    public String getFacilitiesClearance() {
+        return facilitiesClearance;
+    }
+
+    public void setFacilitiesClearance(String facilitiesClearance) {
+        this.facilitiesClearance = facilitiesClearance;
+    }
+
+    public String getLibraryClearance() {
+        return libraryClearance;
+    }
+
+    public void setLibraryClearance(String libraryClearance) {
+        this.libraryClearance = libraryClearance;
     }
 }

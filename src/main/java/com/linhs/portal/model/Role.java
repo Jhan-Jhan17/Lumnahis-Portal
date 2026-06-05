@@ -8,5 +8,6 @@ public enum Role {
     REGISTRAR,
     GUIDANCE_COUNSELOR,
     NURSE,
-    FACILITIES_ADMIN
+    FACILITIES_ADMIN,
+    LIBRARIAN
 }
