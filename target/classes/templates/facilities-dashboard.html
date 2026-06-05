@@ -115,7 +115,7 @@
                     <div class="text-sm font-semibold" th:text="${adminName}">Facilities Admin</div>
                     <div class="text-xs text-muted">Property & Custodian Officer</div>
                 </div>
-                <a href="/logout" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="/logout" onclick="return confirm('Are you sure you want to logout?')" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
             </div>
         </div>
     </nav>

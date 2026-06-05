@@ -131,7 +131,7 @@
                     <div class="text-sm font-semibold text-white" th:text="${adminName}">Library Admin</div>
                     <div class="text-xs text-muted">Chief Librarian / Custodian Officer</div>
                 </div>
-                <a href="/logout" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="/logout" onclick="return confirm('Are you sure you want to logout?')" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
             </div>
         </div>
     </nav>
@@ -152,20 +152,25 @@
                         <i class="fas fa-plus-circle"></i> Log Book Asset Hold
                     </h5>
                     <form th:action="@{/library/log}" method="POST">
-                        <input type="hidden" name="studentName" class="hiddenStudentName" value="" />
+                        <input type="hidden" id="libLrn" name="lrn" required />
+                        <input type="hidden" id="libStudentName" name="studentName" required />
+                        
                         <div class="mb-3">
-                            <label class="form-label text-xs font-semibold text-muted">Select Target Accountable
-                                Student</label>
-                            <select name="lrn" class="form-select select2-setup" onchange="updateHiddenName(this)"
-                                required>
-                                <option value="" disabled selected style="color: var(--text-muted);">Choose student
-                                    registry...</option>
-                                <option th:each="student : ${students}" th:value="${student.lrn}"
-                                    th:text="${student.name} + ' (' + ${student.lrn} + ')'"></option>
-                            </select>
+                            <label class="form-label text-xs font-semibold" style="color: var(--text-muted);">Search Student by Name</label>
+                            <input type="text" id="libStudentSearch" class="form-control" 
+                                placeholder="Type student name or LRN..." 
+                                oninput="filterLibraryStudents(this.value)">
+                            <div id="libStudentDropdown" class="mt-2" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg);">
+                            </div>
                         </div>
+                        
+                        <div id="libSelectedStudent" class="mb-3 p-2 rounded" style="background-color: rgba(32, 201, 151, 0.1); border: 1px solid var(--border-color); display: none;">
+                            <small style="color: var(--text-muted);">Selected:</small>
+                            <div id="libSelectedName" style="color: var(--mint-green); font-weight: 600;"></div>
+                        </div>
+
                         <div class="mb-4">
-                            <label class="form-label text-xs font-semibold text-muted">Circulating Book Assets Hold
+                            <label class="form-label text-xs font-semibold" style="color: var(--text-muted);">Circulating Book Assets Hold
                                 Details</label>
                             <textarea name="bookDetails" class="form-control" rows="4"
                                 placeholder="Specify textbook details, accession number, publication title data, or unreturned learning materials..."
@@ -216,9 +221,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(unreturnedBorrows)}">
-                                    <td colspan="5" class="text-muted py-4 text-center">No outstanding unreturned book
-                                        assets flagged in library inventory records.</td>
-                                    end text files.
+                                    <td colspan="5" class="text-muted py-4 text-center">No outstanding unreturned book assets flagged in library inventory records.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -230,17 +233,69 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const libStudents = [
+            <th:block th:each="student : ${students}">
+            { name: [[${student.name}]], lrn: [[${student.lrn}]] },
+            </th:block>
+        ];
+
+        function filterLibraryStudents(query) {
+            const dropdown = document.getElementById('libStudentDropdown');
+            const lrnInput = document.getElementById('libLrn');
+            const nameInput = document.getElementById('libStudentName');
+            
+            if (query.trim() === '') {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            const filtered = libStudents.filter(student => 
+                student.name.toLowerCase().includes(query.toLowerCase()) || 
+                student.lrn.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="p-2" style="color: var(--text-muted);">No students found</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            dropdown.innerHTML = filtered.map(student => `
+                <div class="p-2" style="border-bottom: 1px solid var(--border-color); cursor: pointer; color: var(--text-main);" 
+                     onmouseover="this.style.backgroundColor = 'rgba(32, 201, 151, 0.1)'" 
+                     onmouseout="this.style.backgroundColor = 'transparent'"
+                     onclick="selectLibraryStudent('${student.lrn}', '${student.name}')">
+                    <div style="font-weight: 600;">${student.name}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">${student.lrn}</div>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+        }
+
+        function selectLibraryStudent(lrn, name) {
+            document.getElementById('libLrn').value = lrn;
+            document.getElementById('libStudentName').value = name;
+            document.getElementById('libStudentSearch').value = name + ' (' + lrn + ')';
+            document.getElementById('libSelectedName').textContent = name + ' - ' + lrn;
+            document.getElementById('libSelectedStudent').style.display = 'block';
+            document.getElementById('libStudentDropdown').style.display = 'none';
+        }
+
         function showSection(sectionId) {
             document.querySelectorAll('.student-table-container').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.section-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('table-' + sectionId).style.display = 'block';
             document.getElementById('btn-' + sectionId).classList.add('active');
         }
-        function updateHiddenName(selectElement) {
-            const selectedText = selectElement.options[selectElement.selectedIndex].text;
-            const nameOnly = selectedText.substring(0, selectedText.lastIndexOf(' ('));
-            selectElement.closest('form').querySelector('.hiddenStudentName').value = nameOnly;
-        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('libStudentDropdown');
+            const input = document.getElementById('libStudentSearch');
+            if (event.target !== input && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
     </script>
 </body>
 

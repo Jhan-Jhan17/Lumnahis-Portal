@@ -6,13 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StudentRepository extends JpaRepository<Student, String> {
+    // Fixed: Reverted back to the true database entity model type context
+    Optional<Student> findByLrn(String lrn);
     List<Student> findBySection(String section);
-
-    List<Student> findAllByOrderByNameAsc();
-
-    // --- BRIDGE METHOD TO FIX THE CONTROLLER RED LINES ---
-    // Redirects studentRepository.findByLrn(lrn) calls to the built-in findById()
-    default Optional<Student> findByLrn(String lrn) {
-        return findById(lrn);
-    }
 }

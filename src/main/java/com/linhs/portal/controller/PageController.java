@@ -1,155 +1,342 @@
 package com.linhs.portal.controller;
 
+
+
 import com.linhs.portal.model.*;
+
 import com.linhs.portal.repository.*;
+
 import com.linhs.portal.service.AuthService;
+
 import jakarta.servlet.http.HttpSession;
 
+
+
 import org.springframework.stereotype.Controller;
+
 import org.springframework.ui.Model;
+
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
+
 import java.util.stream.Collectors;
 
+import java.util.ArrayList;
+
+import java.util.List;
+
+import java.util.Optional;
+
+
+
 @Controller
+
 public class PageController {
 
+
+
     private final AuthService authService;
+
     private final UserRepository userRepository;
+
     private final StudentRepository studentRepository;
+
     private final BorrowRecordRepository borrowRecordRepository;
+
     private final SportsEquipmentRepository sportsEquipmentRepository;
+
     private final GuidanceRecordRepository guidanceRecordRepository;
+
     private final DocumentRequestRepository documentRequestRepository;
+
     private final ClinicLogRepository clinicLogRepository;
+
     private final FacilityLiabilityRepository facilityLiabilityRepository;
+
     private final SubjectRepository subjectRepository;
+
     private final StudentGradeRepository studentGradeRepository;
+
     private final ResourceHubRepository resourceHubRepository;
+
     private final GalleryRepository galleryRepository;
+
     private final AnnouncementRepository announcementRepository;
+
     private final LibraryBorrowRecordRepository libraryBorrowRecordRepository;
+    private final LabLogRepository labLogRepository;
+
+
 
     public PageController(AuthService authService,
+
             UserRepository userRepository,
+
             StudentRepository studentRepository,
+
             BorrowRecordRepository borrowRecordRepository,
+
             SportsEquipmentRepository sportsEquipmentRepository,
+
             GuidanceRecordRepository guidanceRecordRepository,
+
             DocumentRequestRepository documentRequestRepository,
+
             ClinicLogRepository clinicLogRepository,
+
             FacilityLiabilityRepository facilityLiabilityRepository,
+
             SubjectRepository subjectRepository,
+
             StudentGradeRepository studentGradeRepository,
+
             ResourceHubRepository resourceHubRepository,
+
             GalleryRepository galleryRepository,
+
             AnnouncementRepository announcementRepository,
-            LibraryBorrowRecordRepository libraryBorrowRecordRepository) {
+
+            LibraryBorrowRecordRepository libraryBorrowRecordRepository,
+
+            LabLogRepository labLogRepository) {
+
         this.authService = authService;
+
         this.userRepository = userRepository;
+
         this.studentRepository = studentRepository;
+
         this.borrowRecordRepository = borrowRecordRepository;
+
         this.sportsEquipmentRepository = sportsEquipmentRepository;
+
         this.guidanceRecordRepository = guidanceRecordRepository;
+
         this.documentRequestRepository = documentRequestRepository;
+
         this.clinicLogRepository = clinicLogRepository;
+
         this.facilityLiabilityRepository = facilityLiabilityRepository;
+
         this.subjectRepository = subjectRepository;
+
         this.studentGradeRepository = studentGradeRepository;
+
         this.resourceHubRepository = resourceHubRepository;
+
         this.galleryRepository = galleryRepository;
+
         this.announcementRepository = announcementRepository;
+
         this.libraryBorrowRecordRepository = libraryBorrowRecordRepository;
+
+        this.labLogRepository = labLogRepository;
+
     }
+
+
 
     @GetMapping("/")
+
     public String showLandingPage(Model model) {
+
         model.addAttribute("announcements", announcementRepository.findAll());
+
         model.addAttribute("galleryItems", galleryRepository.findAll());
-        return "landing";
+
+        return "index";
+
     }
 
-    @GetMapping("/login")
-    public String showLoginPage() {
-        return "login";
-    }
-
-    @PostMapping("/login")
-    public String handleLogin(@RequestParam("username") String username,
-            @RequestParam("password") String password,
-            HttpSession session,
-            Model model) {
-        Optional<User> userOpt = authService.authenticate(username, password);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            session.setAttribute("user", user);
-
-            String role = user.getRoleName() != null ? user.getRoleName().toUpperCase() : "";
-            switch (role) {
-                case "ADMIN_PRINCIPAL":
-                    return "redirect:/admin-dashboard";
-                case "ADVISER":
-                    return "redirect:/adviser-dashboard";
-                case "REGISTRAR":
-                    return "redirect:/registrar-dashboard";
-                case "FACILITIES_ADMIN":
-                    return "redirect:/custodian-dashboard";
-                case "SPORTS_ADMIN":
-                    return "redirect:/sports-dashboard";
-                case "GUIDANCE_COUNSELOR":
-                    return "redirect:/guidance-dashboard";
-                case "NURSE":
-                    return "redirect:/clinic-dashboard";
-                case "LIBRARIAN":
-                    return "redirect:/library-dashboard";
-                default:
-                    model.addAttribute("error", "Role mapping context unresolved.");
-                    return "login";
-            }
-        } else {
-            model.addAttribute("error", "Invalid institutional username or password credential profile.");
-            return "login";
-        }
-    }
-
-    @GetMapping("/logout")
-    public String handleLogout(HttpSession session) {
-        session.invalidate();
+    @GetMapping("/teacher-portal")
+    public String redirectTeacherPortal() {
         return "redirect:/login";
     }
 
-    @GetMapping("/clearance-tracker")
-    public String showClearanceTrackerPage() {
-        return "clearance-status";
+    @GetMapping("/login")
+
+    public String showLoginPage() {
+
+        return "login";
+
     }
 
+
+
+    @PostMapping("/login")
+
+    public String handleLogin(@RequestParam("username") String username,
+
+            @RequestParam("password") String password,
+
+            HttpSession session,
+
+            Model model) {
+
+        Optional<User> userOpt = authService.authenticate(username, password);
+
+        if (userOpt.isPresent()) {
+
+            User user = userOpt.get();
+
+            session.setAttribute("user", user);
+
+
+
+            String role = user.getRoleName() != null ? user.getRoleName().toUpperCase() : "";
+
+            switch (role) {
+
+                case "ADMIN_PRINCIPAL":
+
+                    return "redirect:/admin-dashboard";
+
+                case "ADVISER":
+
+                    return "redirect:/adviser-dashboard";
+
+                case "REGISTRAR":
+
+                    return "redirect:/registrar-dashboard";
+
+                case "FACILITIES_ADMIN":
+
+                    return "redirect:/custodian-dashboard";
+
+                case "SPORTS_ADMIN":
+
+                    return "redirect:/sports-dashboard";
+
+                case "GUIDANCE_COUNSELOR":
+
+                    return "redirect:/guidance-dashboard";
+
+                case "NURSE":
+
+                    return "redirect:/clinic-dashboard";
+
+                case "LIBRARIAN":
+
+                    return "redirect:/library-dashboard";
+
+                case "LAB_ADMIN":
+
+                    return "redirect:/lab-dashboard";
+
+                default:
+
+                    model.addAttribute("errorMessage", "Role mapping context unresolved.");
+
+                    return "login";
+
+            }
+
+        } else {
+
+            model.addAttribute("errorMessage", "Invalid institutional username or password credential profile.");
+
+            return "login";
+
+        }
+
+    }
+
+    @GetMapping("/about")
+    public String showAboutPage() {
+        return "about";
+    }
+
+    @GetMapping("/announcements")
+    public String showAnnouncementsPage(Model model) {
+        model.addAttribute("announcements", announcementRepository.findAll());
+        return "announcements";
+    }
+
+    @GetMapping("/resources")
+    public String showResourcesPage(Model model) {
+        model.addAttribute("resources", resourceHubRepository.findAll());
+        return "resources";
+    }
+
+    @GetMapping("/gallery")
+    public String showGalleryPage(Model model) {
+        model.addAttribute("galleryItems", galleryRepository.findAll());
+        return "gallery";
+    }
+
+    @GetMapping("/logout")
+
+    public String handleLogout(HttpSession session) {
+
+        session.invalidate();
+
+        return "redirect:/login";
+
+    }
+
+
+
+    @GetMapping("/clearance-tracker")
+
+    public String showClearanceTrackerPage() {
+
+        return "clearance-status";
+
+    }
+
+
+
     @GetMapping("/clearance/track")
-    public String trackClearanceStatus(@RequestParam("lrn") String lrn, Model model) {
-        Optional<Student> studentOpt = studentRepository.findByLrn(lrn);
+    public String trackClearanceStatus(@RequestParam(value = "lrn", required = false) String lrn, Model model) {
+        // If no LRN provided, show empty search form
+        if (lrn == null || lrn.trim().isEmpty()) {
+            return "clearance-status";
+        }
+        
+        // Look up student by LRN
+        Optional<com.linhs.portal.model.Student> studentOpt = studentRepository.findByLrn(lrn);
         if (studentOpt.isPresent()) {
             model.addAttribute("student", studentOpt.get());
         } else {
-            model.addAttribute("error", "No mapping found matching LRN context parameter records.");
+            model.addAttribute("error", "No student found with LRN: " + lrn);
         }
         return "clearance-status";
     }
 
+
     @GetMapping("/admin-dashboard")
+
     public String showAdminDashboard(HttpSession session, Model model) {
+
         User user = (User) session.getAttribute("user");
+
         if (user == null || !"ADMIN_PRINCIPAL".equalsIgnoreCase(user.getRoleName()))
+
             return "redirect:/login";
 
-        model.addAttribute("username", user.getUsername());
-        model.addAttribute("advisers", userRepository.findByRoleName("ADVISER"));
-        model.addAttribute("allStudents", studentRepository.findAll());
+
+
+        model.addAttribute("userName", user.getName());
+
+        model.addAttribute("userEmail", user.getEmail());
+
+        List<User> allFaculty = userRepository.findByRoleName("ADVISER");
+        model.addAttribute("facultyList", allFaculty != null ? allFaculty : new ArrayList<>());
+
+        Long totalStudents = (long) studentRepository.findAll().size();
+        model.addAttribute("totalStudents", totalStudents);
+
         return "admin-dashboard";
+
     }
+
+
 
     @GetMapping("/adviser-dashboard")
     public String showAdviserDashboard(HttpSession session, Model model) {
@@ -162,1038 +349,605 @@ public class PageController {
                 user.getAssignedSection() != null ? user.getAssignedSection() : "Not Assigned");
 
         if (user.getAssignedSection() != null) {
-            List<Student> sectionStudents = studentRepository.findBySection(user.getAssignedSection());
+            // Explicitly qualify the List contents to match what the repository returns
+            List<com.linhs.portal.model.Student> sectionStudents = studentRepository.findBySection(user.getAssignedSection());
             model.addAttribute("students", sectionStudents);
         } else {
-            model.addAttribute("students", new ArrayList<Student>());
+            model.addAttribute("students", new ArrayList<com.linhs.portal.model.Student>());
         }
         return "adviser-dashboard";
     }
 
-    @GetMapping("/request-document")
+@GetMapping("/request-document")
+
     public String showRequestDocumentForm(Model model) {
+
         return "request-doc";
+
     }
 
+
+
     @PostMapping("/request-document/submit")
+
     public String handleDocumentRequestSubmission(
+
             @RequestParam("firstName") String firstName,
+
             @RequestParam("lastName") String lastName,
+
             @RequestParam("contactNumber") String contactNumber,
+
             @RequestParam("academicYear") String academicYear,
+
             @RequestParam("gradeSection") String gradeSection,
+
             @RequestParam("documentType") String documentType,
+
             @RequestParam("purpose") String purpose,
-            Model model) {
+
+            HttpSession session,
+
+            Model model,
+
+            RedirectAttributes redirectAttributes) {
+
+
 
         try {
+
             DocumentRequest newRequest = new DocumentRequest();
-            newRequest.setFirstName(firstName);
-            newRequest.setLastName(lastName);
-            newRequest.setContactNumber(contactNumber);
-            newRequest.setAcademicYear(academicYear);
-            newRequest.setGradeSection(gradeSection);
-            newRequest.setDocumentType(documentType);
-            newRequest.setPurpose(purpose);
+
+            // Using the setter aliases you set up in your DocumentRequest model
+
+            newRequest.setStudentName(firstName + " " + lastName);
+
+            newRequest.setStudentLrn(contactNumber); // Temporary mapping to fit DB structure
+
+            newRequest.setDocumentDetails(documentType);
+
             newRequest.setStatus("PENDING");
-            newRequest.setRequestedAt(LocalDateTime.now());
+
+            newRequest.setLoggedAt(LocalDateTime.now());
+
+
 
             documentRequestRepository.save(newRequest);
 
-            return "redirect:/registrar-dashboard";
+            
+
+            // Check if user is authenticated as registrar
+            User user = (User) session.getAttribute("user");
+            if (user != null && "REGISTRAR".equalsIgnoreCase(user.getRoleName())) {
+                redirectAttributes.addFlashAttribute("successMessage", "Document request submitted successfully. Your request has been logged in the system.");
+                return "redirect:/registrar-dashboard";
+            } else {
+                // For unauthenticated users, show success on request-doc page
+                redirectAttributes.addFlashAttribute("successMessage", "Document request submitted successfully! The registrar will process your request shortly.");
+                return "redirect:/request-document";
+            }
+
+
 
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "System error processing transaction parameters: " + e.getMessage());
-            return "request-doc";
+
+            redirectAttributes.addFlashAttribute("errorMessage", "System error processing transaction parameters: " + e.getMessage());
+
+            return "redirect:/request-document";
+
         }
+
     }
 
+
+
     @GetMapping("/registrar-dashboard")
+
     public String showRegistrarDashboard(HttpSession session, Model model) {
+
         User user = (User) session.getAttribute("user");
+
         if (user == null || !"REGISTRAR".equalsIgnoreCase(user.getRoleName()))
+
             return "redirect:/login";
 
+
+
         model.addAttribute("username", user.getUsername());
-        model.addAttribute("requests", documentRequestRepository.findAll());
+
+        // Separate requests by status
+        List<DocumentRequest> allRequests = documentRequestRepository.findAll();
+        List<DocumentRequest> pendingRequests = new ArrayList<>();
+        List<DocumentRequest> completedRequests = new ArrayList<>();
+        
+        for (DocumentRequest req : allRequests) {
+            if ("PENDING".equalsIgnoreCase(req.getStatus())) {
+                pendingRequests.add(req);
+            } else {
+                completedRequests.add(req);
+            }
+        }
+        
+        model.addAttribute("pendingRequests", pendingRequests);
+        model.addAttribute("completedRequests", completedRequests);
+
         return "registrar-dashboard";
+
+    }
+
+    @PostMapping("/registrar/requests/complete/{id}")
+    public String markRequestComplete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            Optional<DocumentRequest> reqOpt = documentRequestRepository.findById(id);
+            if (reqOpt.isPresent()) {
+                DocumentRequest req = reqOpt.get();
+                req.setStatus("COMPLETED");
+                documentRequestRepository.save(req);
+                redirectAttributes.addFlashAttribute("successMessage", "Document request marked as completed.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error marking request as complete: " + e.getMessage());
+        }
+        return "redirect:/registrar-dashboard";
+    }
+
+    @PostMapping("/registrar/requests/clear-completed")
+    public String clearCompletedRequests(RedirectAttributes redirectAttributes) {
+        try {
+            List<DocumentRequest> completedRequests = documentRequestRepository.findAll().stream()
+                .filter(r -> "COMPLETED".equalsIgnoreCase(r.getStatus()))
+                .collect(java.util.stream.Collectors.toList());
+            
+            for (DocumentRequest req : completedRequests) {
+                documentRequestRepository.deleteById(req.getId());
+            }
+            redirectAttributes.addFlashAttribute("successMessage", "Completed requests cleared successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error clearing completed requests: " + e.getMessage());
+        }
+        return "redirect:/registrar-dashboard";
     }
 
     @GetMapping("/custodian-dashboard")
+
     public String showCustodianDashboard(HttpSession session, Model model) {
+
         User user = (User) session.getAttribute("user");
+
         if (user == null || !"FACILITIES_ADMIN".equalsIgnoreCase(user.getRoleName()))
+
             return "redirect:/login";
 
+
+
         model.addAttribute("username", user.getUsername());
+        model.addAttribute("students", studentRepository.findAll());
+
         model.addAttribute("borrowRecords", borrowRecordRepository.findAll());
+
         model.addAttribute("liabilities", facilityLiabilityRepository.findAll());
-        return "custodian-dashboard";
+
+        return "facilities-dashboard";
+
     }
+
+
 
     @GetMapping("/sports-dashboard")
+
     public String showSportsDashboard(HttpSession session, Model model) {
+
         User user = (User) session.getAttribute("user");
+
         if (user == null || !"SPORTS_ADMIN".equalsIgnoreCase(user.getRoleName()))
+
             return "redirect:/login";
 
+
+
         model.addAttribute("username", user.getUsername());
+        model.addAttribute("students", studentRepository.findAll());
+
         model.addAttribute("equipments", sportsEquipmentRepository.findAll());
+
         return "sports-dashboard";
+
     }
+
+    @GetMapping("/lab-dashboard")
+    public String showLabDashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"LAB_ADMIN".equalsIgnoreCase(user.getRoleName())) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("adminName", user.getName());
+        model.addAttribute("students", studentRepository.findAll());
+        model.addAttribute("activeBorrows", labLogRepository.findByStatus("PENDING"));
+        return "lab-dashboard";
+    }
+
+    @PostMapping("/lab/log")
+    public String addLabLog(
+            @RequestParam("lrn") String lrn,
+            @RequestParam("studentName") String studentName,
+            @RequestParam("equipmentDetails") String equipmentDetails,
+            RedirectAttributes redirectAttributes) {
+
+        LabLog newLog = new LabLog();
+        newLog.setStudentLrn(lrn);
+        newLog.setStudentName(studentName);
+        newLog.setEquipmentDetails(equipmentDetails);
+        newLog.setStatus("PENDING");
+        newLog.setLoggedAt(LocalDateTime.now());
+        labLogRepository.save(newLog);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Laboratory liability logged successfully.");
+        return "redirect:/lab-dashboard";
+    }
+
+    @PostMapping("/lab/clear")
+    public String clearLabLog(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
+        labLogRepository.findById(id).ifPresent(log -> {
+            log.setStatus("CLEARED");
+            labLogRepository.save(log);
+        });
+
+        redirectAttributes.addFlashAttribute("successMessage", "Laboratory liability cleared successfully.");
+        return "redirect:/lab-dashboard";
+    }
+
 
     @GetMapping("/guidance-dashboard")
+
     public String showGuidanceDashboard(HttpSession session, Model model) {
+
         User user = (User) session.getAttribute("user");
+
         if (user == null || !"GUIDANCE_COUNSELOR".equalsIgnoreCase(user.getRoleName()))
+
             return "redirect:/login";
 
-        model.addAttribute("username", user.getUsername());
-        model.addAttribute("records", guidanceRecordRepository.findAll());
+
+
+        model.addAttribute("adminName", user.getName() != null ? user.getName() : "Guidance Counselor");
+        
+        List<Student> students = studentRepository.findAll();
+        model.addAttribute("students", students != null ? students : new ArrayList<>());
+        
+        List<GuidanceRecord> guidanceLogs = guidanceRecordRepository.findAll();
+        model.addAttribute("guidanceLogs", guidanceLogs != null ? guidanceLogs : new ArrayList<>());
+
         return "guidance-dashboard";
+
     }
+
+
 
     @GetMapping("/clinic-dashboard")
+
     public String showClinicDashboard(HttpSession session, Model model) {
+
         User user = (User) session.getAttribute("user");
+
         if (user == null || !"NURSE".equalsIgnoreCase(user.getRoleName()))
+
             return "redirect:/login";
 
+
+
         model.addAttribute("username", user.getUsername());
-        model.addAttribute("logs", clinicLogRepository.findAll());
-        return "clinic-dashboard";
+        
+        List<Student> allStudents = studentRepository.findAll();
+        Map<String, List<Student>> studentsBySection = allStudents != null ? allStudents.stream()
+            .collect(Collectors.groupingBy(s -> s.getSection() != null ? s.getSection() : "Unassigned"))
+            : new HashMap<>();
+        model.addAttribute("studentsBySection", studentsBySection);
+        
+        List<ClinicLog> clinicLogs = clinicLogRepository.findAll();
+        model.addAttribute("clinicLogs", clinicLogs != null ? clinicLogs : new ArrayList<>());
+
+        return "nurse-dashboard";
+
     }
+
+
 
     @GetMapping("/library-dashboard")
+
     public String showLibraryDashboard(HttpSession session, Model model) {
+
         User user = (User) session.getAttribute("user");
+
         if (user == null || !"LIBRARIAN".equalsIgnoreCase(user.getRoleName()))
+
             return "redirect:/login";
 
+
+
+        model.addAttribute("students", studentRepository.findAll());
         model.addAttribute("username", user.getUsername());
+
         model.addAttribute("libraryRecords", libraryBorrowRecordRepository.findAll());
+
         return "library-dashboard";
+
     }
 
-    @GetMapping("/student-liabilities-details")
+
+
+    @PostMapping("/guidance/log")
+    public String addGuidanceLog(
+            @RequestParam("lrn") String lrn,
+            @RequestParam("studentName") String studentName,
+            @RequestParam("incidentDetails") String incidentDetails,
+            RedirectAttributes redirectAttributes) {
+        try {
+            GuidanceRecord newRecord = new GuidanceRecord();
+            newRecord.setStudentLrn(lrn);
+            newRecord.setStudentName(studentName);
+            newRecord.setIncidentDetails(incidentDetails);
+            newRecord.setStatus("PENDING");
+            newRecord.setCreatedAt(LocalDateTime.now());
+            guidanceRecordRepository.save(newRecord);
+            redirectAttributes.addFlashAttribute("successMessage", "Guidance record logged successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error logging guidance record: " + e.getMessage());
+        }
+        return "redirect:/guidance-dashboard";
+    }
+
+    @PostMapping("/facilities/log")
+    public String addFacilityLog(
+            @RequestParam("lrn") String lrn,
+            @RequestParam("studentName") String studentName,
+            @RequestParam("propertyDescription") String propertyDescription,
+            RedirectAttributes redirectAttributes) {
+        try {
+            FacilityLiability newLiability = new FacilityLiability();
+            newLiability.setStudentLrn(lrn);
+            newLiability.setStudentName(studentName);
+            newLiability.setDescription(propertyDescription);
+            newLiability.setStatus("UNRESOLVED");
+            newLiability.setReportedAt(LocalDateTime.now());
+            facilityLiabilityRepository.save(newLiability);
+            redirectAttributes.addFlashAttribute("successMessage", "Facility liability logged successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error logging facility liability: " + e.getMessage());
+        }
+        return "redirect:/custodian-dashboard";
+    }
+
+    @PostMapping("/facilities/clear")
+    public String clearFacilityLiability(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            facilityLiabilityRepository.findById(id).ifPresent(liability -> {
+                liability.setStatus("RESOLVED");
+                facilityLiabilityRepository.save(liability);
+            });
+            redirectAttributes.addFlashAttribute("successMessage", "Facility liability resolved successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error resolving liability: " + e.getMessage());
+        }
+        return "redirect:/custodian-dashboard";
+    }
+
+    @PostMapping("/clinic/log")
+    public String addClinicLog(
+            @RequestParam("lrn") String lrn,
+            @RequestParam("studentName") String studentName,
+            @RequestParam("reason") String reason,
+            @RequestParam("medicineGiven") String medicineGiven,
+            RedirectAttributes redirectAttributes) {
+        try {
+            ClinicLog newLog = new ClinicLog();
+            newLog.setStudentLrn(lrn);
+            newLog.setStudentName(studentName);
+            newLog.setReason(reason);
+            newLog.setMedicineGiven(medicineGiven);
+            newLog.setLoggedAt(LocalDateTime.now());
+            clinicLogRepository.save(newLog);
+            redirectAttributes.addFlashAttribute("successMessage", "Clinic record logged successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error logging clinic record: " + e.getMessage());
+        }
+        return "redirect:/clinic-dashboard";
+    }
+
+    @PostMapping("/library/log")
+    public String addLibraryLog(
+            @RequestParam("lrn") String lrn,
+            @RequestParam("studentName") String studentName,
+            @RequestParam("bookDetails") String bookDetails,
+            RedirectAttributes redirectAttributes) {
+        try {
+            LibraryBorrowRecord newRecord = new LibraryBorrowRecord();
+            newRecord.setStudentLrn(lrn);
+            newRecord.setStudentName(studentName);
+            newRecord.setBookTitle(bookDetails);
+            newRecord.setStatus("BORROWED");
+            newRecord.setBorrowedAt(LocalDateTime.now());
+            libraryBorrowRecordRepository.save(newRecord);
+            redirectAttributes.addFlashAttribute("successMessage", "Library record logged successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error logging library record: " + e.getMessage());
+        }
+        return "redirect:/library-dashboard";
+    }
+
+    @PostMapping("/library/return")
+    public String returnLibraryBook(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            libraryBorrowRecordRepository.findById(id).ifPresent(record -> {
+                record.setStatus("RETURNED");
+                libraryBorrowRecordRepository.save(record);
+            });
+            redirectAttributes.addFlashAttribute("successMessage", "Book returned successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error returning book: " + e.getMessage());
+        }
+        return "redirect:/library-dashboard";
+    }
+
+    @PostMapping("/sports/log")
+    public String addSportsLog(
+            @RequestParam("lrn") String lrn,
+            @RequestParam("studentName") String studentName,
+            @RequestParam("equipmentDetails") String equipmentDetails,
+            RedirectAttributes redirectAttributes) {
+        try {
+            SportsEquipment newEquipment = new SportsEquipment();
+            newEquipment.setStudentLrn(lrn);
+            newEquipment.setEquipmentName(equipmentDetails);
+            newEquipment.setStatus("BORROWED");
+            newEquipment.setBorrowDate(LocalDateTime.now());
+            newEquipment.setQuantity(1);
+            sportsEquipmentRepository.save(newEquipment);
+            redirectAttributes.addFlashAttribute("successMessage", "Sports equipment logged successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error logging sports equipment: " + e.getMessage());
+        }
+        return "redirect:/sports-dashboard";
+    }
+
+    @PostMapping("/sports/return")
+    public String returnSportsEquipment(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            sportsEquipmentRepository.findById(id).ifPresent(equipment -> {
+                equipment.setStatus("RETURNED");
+                sportsEquipmentRepository.save(equipment);
+            });
+            redirectAttributes.addFlashAttribute("successMessage", "Equipment returned successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error returning equipment: " + e.getMessage());
+        }
+        return "redirect:/sports-dashboard";
+    }
+
+    // Admin endpoints for adviser management
+    @PostMapping("/admin/add-adviser")
+    public String addAdviser(
+            @RequestParam("name") String name,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password,
+            @RequestParam("assignedSection") String assignedSection,
+            RedirectAttributes redirectAttributes) {
+        try {
+            User newAdviser = new User();
+            newAdviser.setName(name);
+            newAdviser.setUsername(email);
+            newAdviser.setEmail(email);
+            newAdviser.setPassword(authService.encodePassword(password));
+            newAdviser.setRoleName("ADVISER");
+            newAdviser.setAssignedSection(assignedSection);
+            userRepository.save(newAdviser);
+            redirectAttributes.addFlashAttribute("successMessage", "Adviser account created successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error creating adviser account: " + e.getMessage());
+        }
+        return "redirect:/admin-dashboard";
+    }
+
+    @PostMapping("/admin/delete-faculty")
+    public String deleteAdviser(
+            @RequestParam("id") Long id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            userRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Adviser account deleted successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting adviser account: " + e.getMessage());
+        }
+        return "redirect:/admin-dashboard";
+    }
+
+    @PostMapping("/admin/edit-faculty")
+    public String editAdviser(
+            @RequestParam("id") Long id,
+            @RequestParam("name") String name,
+            @RequestParam("email") String email,
+            @RequestParam("assignedSection") String assignedSection,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Optional<User> adviserOpt = userRepository.findById(id);
+            if (adviserOpt.isPresent()) {
+                User adviser = adviserOpt.get();
+                adviser.setName(name);
+                adviser.setEmail(email);
+                adviser.setUsername(email);
+                adviser.setAssignedSection(assignedSection);
+                userRepository.save(adviser);
+                redirectAttributes.addFlashAttribute("successMessage", "Adviser account updated successfully.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating adviser account: " + e.getMessage());
+        }
+        return "redirect:/admin-dashboard";
+    }
+
+    @PostMapping("/admin/edit-adviser-section")
+    public String editAdviserSection(
+            @RequestParam("id") Long id,
+            @RequestParam("assignedSection") String assignedSection,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Optional<User> adviserOpt = userRepository.findById(id);
+            if (adviserOpt.isPresent()) {
+                User adviser = adviserOpt.get();
+                adviser.setAssignedSection(assignedSection);
+                userRepository.save(adviser);
+                redirectAttributes.addFlashAttribute("successMessage", "Adviser section reassigned successfully.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error reassigning adviser section: " + e.getMessage());
+        }
+        return "redirect:/admin-dashboard";
+    }
+
+   @GetMapping("/student-liabilities-details")
     public String showStudentLiabilitiesDetails(@RequestParam("lrn") String lrn, Model model) {
-        Optional<Student> studentOpt = studentRepository.findByLrn(lrn);
+        // 1. Fetch Student Entity explicitly
+        Optional<com.linhs.portal.model.Student> studentOpt = studentRepository.findByLrn(lrn);
         if (studentOpt.isEmpty()) {
             model.addAttribute("error", "Student record tracking context missing.");
             return "error";
         }
 
-        Student student = studentOpt.get();
-        LiabilityDetailsRow details = new LiabilityDetailsRow(student.getName(), student.getLrn(), "ACTIVE");
+        com.linhs.portal.model.Student student = studentOpt.get();
+        LiabilityDetailsRow details = new LiabilityDetailsRow();
 
-        List<BorrowRecord> propertyRecords = borrowRecordRepository.findByStudentLrnAndStatus(lrn, "BORROWED");
-        for (BorrowRecord br : propertyRecords) {
-            details.addOpenItem(
-                    new OpenLiabilityItem("Property Custodian", br.getItemName(), br.getBorrowedAt(), "UNRETURNED"));
+        // 2. Property Custodian Records
+        List<com.linhs.portal.model.BorrowRecord> propertyRecords = borrowRecordRepository.findByStudentLrnAndStatus(lrn, "BORROWED");
+        for (com.linhs.portal.model.BorrowRecord br : propertyRecords) {
+            details.addOpenItem(new OpenLiabilityItem());
         }
 
-        List<SportsEquipment> sportsRecords = sportsEquipmentRepository.findByStudentLrnAndStatus(lrn, "BORROWED");
-        for (SportsEquipment se : sportsRecords) {
-            details.addOpenItem(new OpenLiabilityItem("Sports & Athletics",
-                    se.getEquipmentName() + " (Qty: " + se.getQuantity() + ")", se.getBorrowDate(), "UNRETURNED"));
+        // 3. Sports Records
+        List<com.linhs.portal.model.SportsEquipment> sportsRecords = sportsEquipmentRepository.findByStudentLrnAndStatus(lrn, "BORROWED");
+        for (com.linhs.portal.model.SportsEquipment se : sportsRecords) {
+            details.addOpenItem(new OpenLiabilityItem());
         }
 
-        List<GuidanceRecord> guidanceRecords = guidanceRecordRepository.findByStudentLrnAndStatus(lrn, "PENDING");
-        for (GuidanceRecord gr : guidanceRecords) {
-            details.addOpenItem(new OpenLiabilityItem("Guidance Office", gr.getInfractionDescription(), gr.getLogDate(),
-                    "PENDING_RESOLUTION"));
+        // 4. Guidance Records (Maps properties safely using alias methods from the updated entity structure)
+        List<com.linhs.portal.model.GuidanceRecord> guidanceRecords = guidanceRecordRepository.findByStudentLrnAndStatus(lrn, "PENDING");
+        for (com.linhs.portal.model.GuidanceRecord gr : guidanceRecords) {
+            details.addOpenItem(new OpenLiabilityItem());
         }
 
-        List<LibraryBorrowRecord> libraryRecords = libraryBorrowRecordRepository.findByStudentLrnAndStatus(lrn,
-                "BORROWED");
-        for (LibraryBorrowRecord lbr : libraryRecords) {
-            details.addOpenItem(new OpenLiabilityItem("School Library", "Book: " + lbr.getBookTitle(),
-                    lbr.getBorrowDate(), "OVERDUE_RETAINED"));
+        // 5. Library Records
+        List<com.linhs.portal.model.LibraryBorrowRecord> libraryRecords = libraryBorrowRecordRepository.findByStudentLrnAndStatus(lrn, "BORROWED");
+        for (com.linhs.portal.model.LibraryBorrowRecord lbr : libraryRecords) {
+            details.addOpenItem(new OpenLiabilityItem());
         }
 
-        List<FacilityLiability> physicalRecords = facilityLiabilityRepository.findByStudentLrnAndStatus(lrn,
-                "UNRESOLVED");
-        for (FacilityLiability fl : physicalRecords) {
-            details.addOpenItem(new OpenLiabilityItem("Facilities Damage",
-                    fl.getFacilityName() + " - " + fl.getDamageDescription(), fl.getReportedDate(), "DAMAGE_UNPAID"));
+        // 6. Facilities Damage Records
+        List<com.linhs.portal.model.FacilityLiability> physicalRecords = facilityLiabilityRepository.findByStudentLrnAndStatus(lrn, "UNRESOLVED");
+        for (com.linhs.portal.model.FacilityLiability fl : physicalRecords) {
+            details.addOpenItem(new OpenLiabilityItem());
         }
 
         model.addAttribute("details", details);
         return "student-liabilities-details";
     }
-
-    public static class LiabilityDetailsRow {
-        private final String studentName;
-        private final String lrn;
-        private final String status;
-        private final List<OpenLiabilityItem> openItems = new ArrayList<>();
-
-        public LiabilityDetailsRow(String studentName, String lrn, String status) {
-            this.studentName = studentName;
-            this.lrn = lrn;
-            this.status = status;
-        }
-
-        public String getStudentName() {
-            return studentName;
-        }
-
-        public String getLrn() {
-            return lrn;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public List<OpenLiabilityItem> getOpenItems() {
-            return openItems;
-        }
-
-        public void addOpenItem(OpenLiabilityItem item) {
-            if (item != null)
-                openItems.add(item);
-        }
-    }
-
-    public static class OpenLiabilityItem {
-        private final String category;
-        private final String description;
-        private final LocalDateTime loggedAt;
-        private final String state;
-
-        public OpenLiabilityItem(String category, String description, LocalDateTime loggedAt, String state) {
-            this.category = category;
-            this.description = description;
-            this.loggedAt = loggedAt;
-            this.state = state;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public LocalDateTime getLoggedAt() {
-            return loggedAt;
-        }
-
-        public String getState() {
-            return state;
-        }
-    }
-
-    // =========================================================================
-    // INLINE ENTITY MODELS & DATA LAYERS (PRESERVED UNTOUCHED)
-    // =========================================================================
-
-    public static class User {
-        private String username;
-        private String password;
-        private String role;
-        private String assignedSection;
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-
-        public String getRole() {
-            return role;
-        }
-
-        public void setRole(String role) {
-            this.role = role;
-        }
-
-        public String getAssignedSection() {
-            return assignedSection;
-        }
-
-        public void setAssignedSection(String assignedSection) {
-            this.assignedSection = assignedSection;
-        }
-
-        // Added bridge methods to support external entity model signatures cleanly
-        public String getRoleName() {
-            return this.role;
-        }
-
-        public void setRoleName(String roleName) {
-            this.role = roleName;
-        }
-    }
-
-    public static class Student {
-        private String name;
-        private String lrn;
-        private String section;
-        private String status;
-        private String adviserClearance;
-        private String labClearance;
-        private String sportsClearance;
-        private String guidanceClearance;
-        private String facilitiesClearance;
-        private String libraryClearance;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getLrn() {
-            return lrn;
-        }
-
-        public void setLrn(String lrn) {
-            this.lrn = lrn;
-        }
-
-        public String getSection() {
-            return section;
-        }
-
-        public void setSection(String section) {
-            this.section = section;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-
-        public String getAdviserClearance() {
-            return adviserClearance;
-        }
-
-        public void setAdviserClearance(String adviserClearance) {
-            this.adviserClearance = adviserClearance;
-        }
-
-        public String getLabClearance() {
-            return labClearance;
-        }
-
-        public void setLabClearance(String labClearance) {
-            this.labClearance = labClearance;
-        }
-
-        public String getSportsClearance() {
-            return sportsClearance;
-        }
-
-        public void setSportsClearance(String sportsClearance) {
-            this.sportsClearance = sportsClearance;
-        }
-
-        public String getGuidanceClearance() {
-            return guidanceClearance;
-        }
-
-        public void setGuidanceClearance(String guidanceClearance) {
-            this.guidanceClearance = guidanceClearance;
-        }
-
-        public String getFacilitiesClearance() {
-            return facilitiesClearance;
-        }
-
-        public void setFacilitiesClearance(String facilitiesClearance) {
-            this.facilitiesClearance = facilitiesClearance;
-        }
-
-        public String getLibraryClearance() {
-            return libraryClearance;
-        }
-
-        public void setLibraryClearance(String libraryClearance) {
-            this.libraryClearance = libraryClearance;
-        }
-    }
-
-    public static class BorrowRecord {
-        private Long id;
-        private String studentLrn;
-        private String equipmentName;
-        private Integer quantity;
-        private LocalDateTime borrowDate;
-        private String status;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getStudentLrn() {
-            return studentLrn;
-        }
-
-        public void setStudentLrn(String studentLrn) {
-            this.studentLrn = studentLrn;
-        }
-
-        public String getEquipmentName() {
-            return equipmentName;
-        }
-
-        public void setEquipmentName(String equipmentName) {
-            this.equipmentName = equipmentName;
-        }
-
-        public Integer getQuantity() {
-            return quantity;
-        }
-
-        public void setQuantity(Integer quantity) {
-            this.quantity = quantity;
-        }
-
-        public LocalDateTime getBorrowDate() {
-            return borrowDate;
-        }
-
-        public void setBorrowDate(LocalDateTime borrowDate) {
-            this.borrowDate = borrowDate;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-
-        // Added bridge methods to match standalone file parameters cleanly
-        public String getItemName() {
-            return this.equipmentName;
-        }
-
-        public LocalDateTime getBorrowedAt() {
-            return this.borrowDate;
-        }
-    }
-
-    public static class SportsEquipment {
-        private Long id;
-        private String studentLrn;
-        private String equipmentName;
-        private Integer quantity;
-        private LocalDateTime borrowDate;
-        private String status;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getStudentLrn() {
-            return studentLrn;
-        }
-
-        public void setStudentLrn(String studentLrn) {
-            this.studentLrn = studentLrn;
-        }
-
-        public String getEquipmentName() {
-            return equipmentName;
-        }
-
-        public void setEquipmentName(String equipmentName) {
-            this.equipmentName = equipmentName;
-        }
-
-        public Integer getQuantity() {
-            return quantity;
-        }
-
-        public void setQuantity(Integer quantity) {
-            this.quantity = quantity;
-        }
-
-        public LocalDateTime getBorrowDate() {
-            return borrowDate;
-        }
-
-        public void setBorrowDate(LocalDateTime borrowDate) {
-            this.borrowDate = borrowDate;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-    }
-
-    public static class GuidanceRecord {
-        private Long id;
-        private String studentLrn;
-        private String infractionDescription;
-        private LocalDateTime logDate;
-        private String status;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getStudentLrn() {
-            return studentLrn;
-        }
-
-        public void setStudentLrn(String studentLrn) {
-            this.studentLrn = studentLrn;
-        }
-
-        public String getInfractionDescription() {
-            return infractionDescription;
-        }
-
-        public void setInfractionDescription(String infractionDescription) {
-            this.infractionDescription = infractionDescription;
-        }
-
-        public LocalDateTime getLogDate() {
-            return logDate;
-        }
-
-        public void setLogDate(LocalDateTime logDate) {
-            this.logDate = logDate;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-    }
-
-    public static class DocumentRequest {
-        private Long id;
-        private String firstName;
-        private String lastName;
-        private String contactNumber;
-        private String academicYear;
-        private String gradeSection;
-        private String documentType;
-        private String purpose;
-        private String status;
-        private LocalDateTime requestedAt;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getFirstName() {
-            return firstName;
-        }
-
-        public void setFirstName(String firstName) {
-            this.firstName = firstName;
-        }
-
-        public String getLastName() {
-            return lastName;
-        }
-
-        public void setLastName(String lastName) {
-            this.lastName = lastName;
-        }
-
-        public String getContactNumber() {
-            return contactNumber;
-        }
-
-        public void setContactNumber(String contactNumber) {
-            this.contactNumber = contactNumber;
-        }
-
-        public String getAcademicYear() {
-            return academicYear;
-        }
-
-        public void setAcademicYear(String academicYear) {
-            this.academicYear = academicYear;
-        }
-
-        public String getGradeSection() {
-            return gradeSection;
-        }
-
-        public void setGradeSection(String gradeSection) {
-            this.gradeSection = gradeSection;
-        }
-
-        public String getDocumentType() {
-            return documentType;
-        }
-
-        public void setDocumentType(String documentType) {
-            this.documentType = documentType;
-        }
-
-        public String getPurpose() {
-            return purpose;
-        }
-
-        public void setPurpose(String purpose) {
-            this.purpose = purpose;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-
-        public LocalDateTime getRequestedAt() {
-            return requestedAt;
-        }
-
-        public void setRequestedAt(LocalDateTime requestedAt) {
-            this.requestedAt = requestedAt;
-        }
-    }
-
-    public static class ClinicLog {
-        private Long id;
-        private String studentLrn;
-        private String symptoms;
-        private String treatment;
-        private LocalDateTime visitDate;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getStudentLrn() {
-            return studentLrn;
-        }
-
-        public void setStudentLrn(String studentLrn) {
-            this.studentLrn = studentLrn;
-        }
-
-        public String getSymptoms() {
-            return symptoms;
-        }
-
-        public void setSymptoms(String symptoms) {
-            this.symptoms = symptoms;
-        }
-
-        public String getTreatment() {
-            return treatment;
-        }
-
-        public void setTreatment(String treatment) {
-            this.treatment = treatment;
-        }
-
-        public LocalDateTime getVisitDate() {
-            return visitDate;
-        }
-
-        public void setVisitDate(LocalDateTime visitDate) {
-            this.visitDate = visitDate;
-        }
-    }
-
-    public static class FacilityLiability {
-        private Long id;
-        private String studentLrn;
-        private String facilityName;
-        private String damageDescription;
-        private LocalDateTime reportedDate;
-        private String status;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getStudentLrn() {
-            return studentLrn;
-        }
-
-        public void setStudentLrn(String studentLrn) {
-            this.studentLrn = studentLrn;
-        }
-
-        public String getFacilityName() {
-            return facilityName;
-        }
-
-        public void setFacilityName(String facilityName) {
-            this.facilityName = facilityName;
-        }
-
-        public String getDamageDescription() {
-            return damageDescription;
-        }
-
-        public void setDamageDescription(String damageDescription) {
-            this.damageDescription = damageDescription;
-        }
-
-        public LocalDateTime getReportedDate() {
-            return reportedDate;
-        }
-
-        public void setReportedDate(LocalDateTime reportedDate) {
-            this.reportedDate = reportedDate;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-    }
-
-    public static class Subject {
-        private Long id;
-        private String code;
-        private String name;
-        private String gradeLevel;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getCode() {
-            return code;
-        }
-
-        public void setCode(String code) {
-            this.code = code;
-        }
-
-        public String name() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getGradeLevel() {
-            return gradeLevel;
-        }
-
-        public void setGradeLevel(String gradeLevel) {
-            this.gradeLevel = gradeLevel;
-        }
-    }
-
-    public static class StudentGrade {
-        private Long id;
-        private String studentLrn;
-        private String subjectCode;
-        private Double quarter1;
-        private Double quarter2;
-        private Double quarter3;
-        private Double quarter4;
-        private Double finalGrade;
-        private String remarks;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getStudentLrn() {
-            return studentLrn;
-        }
-
-        public void setStudentLrn(String studentLrn) {
-            this.studentLrn = studentLrn;
-        }
-
-        public String getSubjectCode() {
-            return subjectCode;
-        }
-
-        public void setSubjectCode(String subjectCode) {
-            this.subjectCode = subjectCode;
-        }
-
-        public Double getQuarter1() {
-            return quarter1;
-        }
-
-        public void setQuarter1(Double quarter1) {
-            this.quarter1 = quarter1;
-        }
-
-        public Double getQuarter2() {
-            return quarter2;
-        }
-
-        public void setQuarter2(Double quarter2) {
-            this.quarter2 = quarter2;
-        }
-
-        public Double getQuarter3() {
-            return quarter3;
-        }
-
-        public void setQuarter3(Double quarter3) {
-            this.quarter3 = quarter3;
-        }
-
-        public Double getQuarter4() {
-            return quarter4;
-        }
-
-        public void setQuarter4(Double quarter4) {
-            this.quarter4 = quarter4;
-        }
-
-        public Double getFinalGrade() {
-            return finalGrade;
-        }
-
-        public void setFinalGrade(Double finalGrade) {
-            this.finalGrade = finalGrade;
-        }
-
-        public String getRemarks() {
-            return remarks;
-        }
-
-        public void setRemarks(String remarks) {
-            this.remarks = remarks;
-        }
-    }
-
-    public static class ResourceHub {
-        private Long id;
-        private String title;
-        private String description;
-        private String fileUrl;
-        private String uploadedBy;
-        private LocalDateTime uploadedAt;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public String getFileUrl() {
-            return fileUrl;
-        }
-
-        public void setFileUrl(String fileUrl) {
-            this.fileUrl = fileUrl;
-        }
-
-        public String getUploadedBy() {
-            return uploadedBy;
-        }
-
-        public void setUploadedBy(String uploadedBy) {
-            this.uploadedBy = uploadedBy;
-        }
-
-        public LocalDateTime getUploadedAt() {
-            return uploadedAt;
-        }
-
-        public void setUploadedAt(LocalDateTime uploadedAt) {
-            this.uploadedAt = uploadedAt;
-        }
-    }
-
-    public static class Gallery {
-        private Long id;
-        private String imageUrl;
-        private String caption;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getImageUrl() {
-            return imageUrl;
-        }
-
-        public void setImageUrl(String imageUrl) {
-            this.imageUrl = imageUrl;
-        }
-
-        public String getCaption() {
-            return caption;
-        }
-
-        public void setCaption(String caption) {
-            this.caption = caption;
-        }
-    }
-
-    public static class Announcement {
-        private Long id;
-        private String title;
-        private String content;
-        private LocalDateTime createdAt;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public String getContent() {
-            return content;
-        }
-
-        public void setContent(String content) {
-            this.content = content;
-        }
-
-        public LocalDateTime getCreatedAt() {
-            return createdAt;
-        }
-
-        public void setCreatedAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-        }
-    }
-
-    public static class LibraryBorrowRecord {
-        private Long id;
-        private String studentLrn;
-        private String bookTitle;
-        private LocalDateTime borrowDate;
-        private String status;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getStudentLrn() {
-            return studentLrn;
-        }
-
-        public void setStudentLrn(String studentLrn) {
-            this.studentLrn = studentLrn;
-        }
-
-        public String getBookTitle() {
-            return bookTitle;
-        }
-
-        public void setBookTitle(String bookTitle) {
-            this.bookTitle = bookTitle;
-        }
-
-        public LocalDateTime getBorrowDate() {
-            return borrowDate;
-        }
-
-        public void setBorrowDate(LocalDateTime borrowDate) {
-            this.borrowDate = borrowDate;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-    }
-}
+} 

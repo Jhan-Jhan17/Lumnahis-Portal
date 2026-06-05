@@ -14,6 +14,7 @@ public class GuidanceRecord {
     private String incidentDetails;
     private String actionTaken;
     private LocalDateTime createdAt;
+    private String status; // Added to support tracking status queries
 
     public GuidanceRecord() {}
 
@@ -34,6 +35,9 @@ public class GuidanceRecord {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     // --- ALIAS METHODS TO SATISFY THE CONTROLLER ---
     

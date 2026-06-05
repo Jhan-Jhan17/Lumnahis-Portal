@@ -115,7 +115,7 @@
                     <div class="text-sm font-semibold" th:text="${adminName}">Guidance Admin</div>
                     <div class="text-xs text-muted">Prefect of Discipline / Counselor</div>
                 </div>
-                <a href="/logout" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="/logout" onclick="return confirm('Are you sure you want to logout?')" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
             </div>
         </div>
     </nav>
@@ -126,7 +126,14 @@
             role="alert">
             <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}">Success encounter update
                 saved.</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}"
+            class="alert alert-danger alert-dismissible fade show bg-opacity-10 text-danger border border-danger"
+            role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMessage}">Error message.</span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
         <div class="row g-4">
@@ -137,20 +144,25 @@
                         <i class="fas fa-edit"></i> File Guidance Case Profile
                     </h5>
                     <form th:action="@{/guidance/log}" method="POST">
-                        <input type="hidden" name="studentName" class="hiddenStudentName" value="" />
+                        <input type="hidden" id="guidanceLrn" name="lrn" required />
+                        <input type="hidden" id="guidanceStudentName" name="studentName" required />
+                        
                         <div class="mb-3">
-                            <label class="form-label text-xs font-semibold text-muted">Select Case Related
-                                Student</label>
-                            <select name="lrn" class="form-select select2-setup" onchange="updateHiddenName(this)"
-                                required>
-                                <option value="" disabled selected>Select student context registry...</option>
-                                <option th:each="student : ${students}" th:value="${student.lrn}"
-                                    th:text="${student.name} + ' (' + ${student.lrn} + ')'"></option>
-                            </select>
+                            <label class="form-label text-xs font-semibold" style="color: var(--text-muted);">Search Student by Name</label>
+                            <input type="text" id="guidanceStudentSearch" class="form-control" 
+                                placeholder="Type student name or LRN..." 
+                                oninput="filterGuidanceStudents(this.value)">
+                            <div id="guidanceStudentDropdown" class="mt-2" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg);">
+                            </div>
                         </div>
+                        
+                        <div id="guidanceSelectedStudent" class="mb-3 p-2 rounded" style="background-color: rgba(32, 201, 151, 0.1); border: 1px solid var(--border-color); display: none;">
+                            <small style="color: var(--text-muted);">Selected:</small>
+                            <div id="guidanceSelectedName" style="color: var(--mint-green); font-weight: 600;"></div>
+                        </div>
+
                         <div class="mb-4">
-                            <label class="form-label text-xs font-semibold text-muted">Incident Narrative / Counseling
-                                Resolution Notes</label>
+                            <label class="form-label text-xs font-semibold" style="color: var(--text-muted);">Incident Narrative / Counseling Resolution Notes</label>
                             <textarea name="incidentDetails" class="form-control" rows="4"
                                 placeholder="Document behavioral infractions, tracking case updates, or guidance resolution metrics..."
                                 required></textarea>
@@ -183,12 +195,11 @@
                             </thead>
                             <tbody>
                                 <tr th:each="log : ${guidanceLogs}">
-                                    <td class="font-mono text-xs fw-bold" th:text="${log.lrn}"></td>
+                                    <td class="font-mono text-xs fw-bold" th:text="${log.studentLrn}"></td>
                                     <td th:text="${log.studentName}"></td>
                                     <td th:text="${log.incidentDetails}"></td>
                                     <td>
-                                        <span class="badge bg-info" th:
-                                            text="${log.loggedAt != null ? #temporals.format(log.loggedAt, 'yyyy-MM-dd | hh:mm a') : 'N/A'}"></span>
+                                        <span class="badge bg-info" th:text="${log.createdAt != null ? #temporals.format(log.createdAt, 'yyyy-MM-dd | hh:mm a') : 'N/A'}"></span>
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(guidanceLogs)}">
@@ -205,17 +216,69 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const students = [
+            <th:block th:each="student : ${students}">
+            { name: [[${student.name}]], lrn: [[${student.lrn}]] },
+            </th:block>
+        ];
+
+        function filterGuidanceStudents(query) {
+            const dropdown = document.getElementById('guidanceStudentDropdown');
+            const lrnInput = document.getElementById('guidanceLrn');
+            const nameInput = document.getElementById('guidanceStudentName');
+            
+            if (query.trim() === '') {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            const filtered = students.filter(student => 
+                student.name.toLowerCase().includes(query.toLowerCase()) || 
+                student.lrn.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="p-2" style="color: var(--text-muted);">No students found</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            dropdown.innerHTML = filtered.map(student => `
+                <div class="p-2" style="border-bottom: 1px solid var(--border-color); cursor: pointer; color: var(--text-main);" 
+                     onmouseover="this.style.backgroundColor = 'rgba(32, 201, 151, 0.1)'" 
+                     onmouseout="this.style.backgroundColor = 'transparent'"
+                     onclick="selectGuidanceStudent('${student.lrn}', '${student.name}')">
+                    <div style="font-weight: 600;">${student.name}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">${student.lrn}</div>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+        }
+
+        function selectGuidanceStudent(lrn, name) {
+            document.getElementById('guidanceLrn').value = lrn;
+            document.getElementById('guidanceStudentName').value = name;
+            document.getElementById('guidanceStudentSearch').value = name + ' (' + lrn + ')';
+            document.getElementById('guidanceSelectedName').textContent = name + ' - ' + lrn;
+            document.getElementById('guidanceSelectedStudent').style.display = 'block';
+            document.getElementById('guidanceStudentDropdown').style.display = 'none';
+        }
+
         function showSection(sectionId) {
             document.querySelectorAll('.student-table-container').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.section-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('table-' + sectionId).style.display = 'block';
             document.getElementById('btn-' + sectionId).classList.add('active');
         }
-        function updateHiddenName(selectElement) {
-            const selectedText = selectElement.options[selectElement.selectedIndex].text;
-            const nameOnly = selectedText.substring(0, selectedText.lastIndexOf(' ('));
-            selectElement.closest('form').querySelector('.hiddenStudentName').value = nameOnly;
-        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('guidanceStudentDropdown');
+            const input = document.getElementById('guidanceStudentSearch');
+            if (event.target !== input && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
     </script>
 </body>
 

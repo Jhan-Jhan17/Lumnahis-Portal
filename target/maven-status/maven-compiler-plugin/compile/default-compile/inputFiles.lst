@@ -7,17 +7,20 @@ C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\re
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\controller\PageController.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\service\CustomUserDetailsService.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\About.java
+C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\controller\LiabilityDetailsRow.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\PortalApplication.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\DocumentRequest.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\LibraryBorrowRecord.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\ClinicLog.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\GalleryRepository.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\StudentGradeRepository.java
+C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\controller\OpenLiabilityItem.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\ClinicRecord.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\BorrowRecord.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\service\ClearanceService.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\BorrowRecordRepository.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\GuidanceRecordRepository.java
+C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\LabLog.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\StudentRepository.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\UserRepository.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\Role.java
@@ -37,5 +40,6 @@ C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\re
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\LiabilityRepository.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\SportsEquipment.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\Student.java
+C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\repository\LabLogRepository.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\config\SecurityConfig.java
 C:\Users\rocky\OneDrive\Documents\linhs-portal\src\main\java\com\linhs\portal\model\Announcement.java

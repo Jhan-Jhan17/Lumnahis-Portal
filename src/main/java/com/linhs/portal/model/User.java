@@ -62,10 +62,6 @@ public class User {
         this.name = name;
     }
 
-    public String getRoleName() {
-        return roleName;
-    }
-
     public void setRoleName(String roleName) {
         this.roleName = roleName;
     }
@@ -91,6 +87,10 @@ public class User {
     }
 
     public String getRole() {
+        return this.roleName;
+    }
+
+    public String getRoleName() {
         return this.roleName;
     }
 

@@ -16,26 +16,73 @@ public class FacilityLiability {
     private String status;
     private LocalDateTime reportedAt;
 
-    public FacilityLiability() {}
+    public FacilityLiability() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getStudentLrn() { return studentLrn; }
-    public void setStudentLrn(String studentLrn) { this.studentLrn = studentLrn; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public String getStudentLrn() {
+        return studentLrn;
+    }
 
-    public String getFacilityOrItem() { return facilityOrItem; }
-    public void setFacilityOrItem(String facilityOrItem) { this.facilityOrItem = facilityOrItem; }
+    public void setStudentLrn(String studentLrn) {
+        this.studentLrn = studentLrn;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getStudentName() {
+        return studentName;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
 
-    public LocalDateTime getReportedAt() { return reportedAt; }
-    public void setReportedAt(LocalDateTime reportedAt) { this.reportedAt = reportedAt; }
+    public String getFacilityOrItem() {
+        return facilityOrItem;
+    }
+
+    public void setFacilityOrItem(String facilityOrItem) {
+        this.facilityOrItem = facilityOrItem;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getReportedAt() {
+        return reportedAt;
+    }
+
+    public void setReportedAt(LocalDateTime reportedAt) {
+        this.reportedAt = reportedAt;
+    }
+
+    // =========================================================
+    // --- BRIDGE METHOD TO MATCH CONTROLLER EXPECTATIONS ---
+    // =========================================================
+    public LocalDateTime getReportedDate() {
+        return this.reportedAt;
+    }
+
+    public void setReportedDate(LocalDateTime reportedDate) {
+        this.reportedAt = reportedDate;
+    }
 }

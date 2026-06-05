@@ -1,0 +1,147 @@
+<!-- Reusable Student Search Bar Component -->
+<style>
+    .student-search-container {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .student-search-bar {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .student-search-bar:focus {
+        outline: none;
+        border-color: #10b981;
+        background-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .student-search-bar::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .student-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #1a1a1a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        max-height: 250px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+    }
+
+    .student-dropdown.active {
+        display: block;
+    }
+
+    .student-option {
+        padding: 0.75rem 1rem;
+        color: #a1a1aa;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .student-option:last-child {
+        border-bottom: none;
+    }
+
+    .student-option:hover,
+    .student-option.selected {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .student-option-name {
+        font-weight: 600;
+    }
+
+    .student-option-lrn {
+        font-size: 0.85rem;
+        color: #727272;
+        margin-top: 0.25rem;
+    }
+</style>
+
+<div class="student-search-container">
+    <input 
+        type="text" 
+        class="student-search-bar" 
+        id="studentSearchBar" 
+        placeholder="Search student by name or LRN..."
+        onkeyup="filterStudents(this)">
+    <div class="student-dropdown" id="studentDropdown">
+        <div class="student-option" th:each="student : ${students}" 
+             onclick="selectStudent(this)"
+             th:data-lrn="${student.lrn}"
+             th:data-name="${student.firstName} ${student.lastName}">
+            <div class="student-option-name" th:text="${student.firstName} + ' ' + ${student.lastName}"></div>
+            <div class="student-option-lrn" th:text="${student.lrn}"></div>
+        </div>
+    </div>
+    <input type="hidden" id="selectedLrn" name="lrn" required>
+    <input type="hidden" id="selectedStudentName" name="studentName" required>
+</div>
+
+<script>
+    function filterStudents(input) {
+        const filter = input.value.toLowerCase();
+        const dropdown = document.getElementById('studentDropdown');
+        const options = dropdown.querySelectorAll('.student-option');
+        
+        if (filter.length === 0) {
+            dropdown.classList.remove('active');
+            return;
+        }
+        
+        dropdown.classList.add('active');
+        let hasResults = false;
+        
+        options.forEach(option => {
+            const name = option.querySelector('.student-option-name').textContent.toLowerCase();
+            const lrn = option.querySelector('.student-option-lrn').textContent.toLowerCase();
+            
+            if (name.includes(filter) || lrn.includes(filter)) {
+                option.style.display = 'block';
+                hasResults = true;
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        if (!hasResults) {
+            dropdown.innerHTML = '<div class="student-option" style="color: #ef4444;">No students found</div>';
+        }
+    }
+
+    function selectStudent(element) {
+        const lrn = element.getAttribute('data-lrn');
+        const name = element.getAttribute('data-name');
+        
+        document.getElementById('studentSearchBar').value = name;
+        document.getElementById('selectedLrn').value = lrn;
+        document.getElementById('selectedStudentName').value = name;
+        document.getElementById('studentDropdown').classList.remove('active');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const container = document.querySelector('.student-search-container');
+        if (container && !container.contains(e.target)) {
+            document.getElementById('studentDropdown').classList.remove('active');
+        }
+    });
+</script>

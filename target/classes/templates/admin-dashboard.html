@@ -87,7 +87,7 @@
             </nav>
         </div>
         <div class="p-4 border-t border-zinc-800">
-            <a href="/logout"
+            <a href="/logout" onclick="return confirm('Are you sure you want to logout?')"
                 class="block w-full text-center px-4 py-2 border border-dangerRed/30 text-dangerRed hover:bg-dangerRed/10 rounded-lg text-sm transition font-medium">
                 <i class="fas fa-sign-out-alt me-2"></i>Secure Logout
             </a>
@@ -126,7 +126,7 @@
                                 Scope</p>
                             <i class="fas fa-users-cog text-zinc-600 text-sm"></i>
                         </div>
-                        <p class="text-3xl font-bold text-white tracking-tight" th:text="${#lists.size(facultyList)}">0
+                        <p class="text-3xl font-bold text-white tracking-tight" th:text="${facultyList != null ? #lists.size(facultyList) : 0}">0
                         </p>
                     </div>
                     <div class="bg-cardBg p-6 rounded-xl border border-zinc-800 shadow-sm sm:col-span-2 lg:col-span-1">

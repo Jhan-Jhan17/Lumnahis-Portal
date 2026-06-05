@@ -7,6 +7,6 @@ import java.util.List;
 public interface GuidanceRecordRepository extends JpaRepository<GuidanceRecord, Long> {
     List<GuidanceRecord> findByStudentLrn(String studentLrn);
 
-    List<com.linhs.portal.controller.PageController.GuidanceRecord> findByStudentLrnAndStatus(String lrn,
-            String string);
+    // Fixed: Now safely returns the real JPA Entity model layer
+    List<GuidanceRecord> findByStudentLrnAndStatus(String lrn, String status);
 }

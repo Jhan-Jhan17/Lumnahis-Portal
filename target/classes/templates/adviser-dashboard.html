@@ -109,7 +109,7 @@
                 <span class="text-muted me-3"><i class="fas fa-user-circle me-1"></i> <span
                         th:text="${userName}">Adviser</span></span>
                 <span class="badge bg-secondary me-3" th:text="${assignedSection}">Section Name</span>
-                <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt me-1"></i>
+                <a href="/logout" onclick="return confirm('Are you sure you want to logout?')" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt me-1"></i>
                     Logout</a>
             </div>
         </div>

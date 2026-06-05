@@ -26,25 +26,56 @@ public class DocumentRequest {
     @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt;
 
-    public DocumentRequest() {}
+    public DocumentRequest() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getStudentLrn() { return studentLrn; }
-    public void setStudentLrn(String studentLrn) { this.studentLrn = studentLrn; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public String getStudentLrn() {
+        return studentLrn;
+    }
 
-    public String getDocumentType() { return documentType; }
-    public void setDocumentType(String documentType) { this.documentType = documentType; }
+    public void setStudentLrn(String studentLrn) {
+        this.studentLrn = studentLrn;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getStudentName() {
+        return studentName;
+    }
 
-    public LocalDateTime getRequestedAt() { return requestedAt; }
-    public void setRequestedAt(LocalDateTime requestedAt) { this.requestedAt = requestedAt; }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(String documentType) {
+        this.documentType = documentType;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getRequestedAt() {
+        return requestedAt;
+    }
+
+    public void setRequestedAt(LocalDateTime requestedAt) {
+        this.requestedAt = requestedAt;
+    }
 
     // --- ALIAS METHODS TO SATISFY THE CONTROLLER ---
 
@@ -63,4 +94,5 @@ public class DocumentRequest {
     public void setDocumentDetails(String documentDetails) {
         this.documentType = documentDetails;
     }
+
 }
